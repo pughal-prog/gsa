@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Global Sports Academy",
+    "slug": "global-sports-academy",
+    "scheme": "gsa",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FFFFFF",
+    "icon": "./assets/icon.png",
+    "splash": { "image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#FFFFFF" },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "ios": { "bundleIdentifier": "in.globalsportsacademy.app", "supportsTablet": true },
+    "android": { "package": "in.globalsportsacademy.app", "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#FFFFFF" } },
+    "experiments": { "typedRoutes": false }
+  }
+}

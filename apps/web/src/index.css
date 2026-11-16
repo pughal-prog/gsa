@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+  /* Palette taken from the academy logo: blue, red, green, sky */
+  --color-page: #f3f6fb;
+  --color-surface: #ffffff;
+  --color-soft: #eef2f9;
+  --color-softer: #e3e9f4;
+  --color-line: #dde4f0;
+  --color-brand: #0b4aa2;
+  --color-brand-dark: #08357a;
+  --color-flame: #e31b23;
+  --color-leaf: #1e8a3c;
+  --color-sky: #0aa5e8;
+  --color-mute: #5d6b86;
+  --color-danger: #d92d20;
+  --color-warn: #c77700;
+}
+
+html { background: var(--color-page); color: #0f1b33; }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.015em; }
+::selection { background: var(--color-brand); color: #fff; }
+* { scrollbar-width: thin; scrollbar-color: #b9c5dc transparent; }
+
+.hero-bg {
+  background:
+    radial-gradient(900px 420px at 85% -10%, rgba(10,165,232,.18), transparent 60%),
+    radial-gradient(700px 380px at 0% 0%, rgba(227,27,35,.08), transparent 60%),
+    linear-gradient(180deg, #fff, #f3f6fb);
+}
+.brand-panel {
+  background:
+    radial-gradient(600px 300px at 90% 0%, rgba(10,165,232,.45), transparent 60%),
+    radial-gradient(500px 300px at 0% 100%, rgba(30,138,60,.35), transparent 60%),
+    linear-gradient(145deg, #0b4aa2, #08357a);
+}
+.stripe { background: linear-gradient(90deg, var(--color-flame) 0 33%, var(--color-brand) 33% 66%, var(--color-leaf) 66%); }
+.shadow-card { box-shadow: 0 1px 2px rgba(16,24,40,.05), 0 10px 28px -14px rgba(16,36,80,.18); }
+@media (prefers-reduced-motion: no-preference) {
+  .rise { animation: rise .45s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}

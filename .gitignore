@@ -1,0 +1,10 @@
+node_modules
+dist
+.wrangler
+.dev.vars
+.env
+*.log
+apps/api/migrations/seed.sql
+apps/mobile/.expo
+
+*.tar.gz
