@@ -1,0 +1,32 @@
+name = "gsa-api"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+WEB_ORIGIN = "https://globalsportsacademy.in"
+GOOGLE_CLIENT_ID = ""
+LATE_GRACE_MINUTES = "10"
+ACADEMY_NAME = "Global Sports Academy"
+
+# Local dev works as is. For production run: wrangler d1 create gsa-db, then paste its real database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "gsa-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+# Create with: wrangler r2 bucket create gsa-media
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "gsa-media"
+
+[triggers]
+# 03:00 UTC = 08:30 IST fee reminders, 14:30 UTC = 20:00 IST absent marking
+crons = ["0 3 * * *", "30 14 * * *"]
+
+# Secrets (wrangler secret put NAME): JWT_SECRET, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET,
+# RAZORPAY_WEBHOOK_SECRET, BIOMETRIC_DEVICE_KEY, WHATSAPP_TOKEN, WHATSAPP_PHONE_ID, WHATSAPP_TEMPLATE
+
+# Production API domain (zone must be on Cloudflare). Uncomment after the first deploy:
+# routes = [{ pattern = "api.globalsportsacademy.in", custom_domain = true }]
