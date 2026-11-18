@@ -7,6 +7,7 @@ import 'pages.dart';
 import 'students.dart';
 import 'fees.dart';
 import 'equipment.dart';
+import 'chat.dart';
 
 class Home extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -43,6 +44,7 @@ class _HomeState extends State<Home> {
       if (role != 'student' && Api.can('attendance.mark')) ('Attendance', Icons.event_available_outlined, const AttendancePage()),
       if (role == 'student' || (role == 'staff' && Api.can('fees.view'))) ('Fees', Icons.receipt_long_outlined, const FeesPage()),
       if (role == 'staff' && Api.can('equipment.view')) ('Equipment', Icons.inventory_2_outlined, const EquipmentBody()),
+      if (role == 'owner') ('Assistant', Icons.smart_toy_outlined, const AssistantPage()),
       if (role == 'owner') ('More', Icons.apps, MorePage(onSignOut: _out)) else ('Account', Icons.person_outline, AccountPage(onSignOut: _out)),
     ];
     if (tab >= pages.length) tab = 0;

@@ -143,6 +143,7 @@ class MorePage extends StatelessWidget {
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => page)))));
     return ListView(padding: const EdgeInsets.all(16), children: [
       item(Icons.how_to_reg_outlined, 'Approvals', 'New students and coaches waiting', const ApprovalsPage()),
+      item(Icons.inbox_outlined, 'Trial enquiries', 'Requests from the website, call or WhatsApp them', const EnquiriesPage()),
       item(Icons.sports_outlined, 'Staff', 'Coaches, their students and permissions', const StaffPage()),
       item(Icons.inventory_2_outlined, 'Equipment shop', 'Stock by section, add items and stock', const EquipmentPage()),
       item(Icons.receipt_long_outlined, 'Fees and fee structure', 'Plans, bills and payments', Scaffold(appBar: AppBar(title: const Text('Fees')), body: const FeesPage())),
@@ -208,4 +209,50 @@ class AccountPage extends StatelessWidget {
 
 class SharedPrefsReset {
   static Future<void> reset() async => Notify.resetAsked();
+}
+
+// ---------- trial enquiries from the website (owner) ----------
+class EnquiriesPage extends StatefulWidget {
+  const EnquiriesPage({super.key});
+  @override
+  State<EnquiriesPage> createState() => _EnquiriesPageState();
+}
+
+class _EnquiriesPageState extends State<EnquiriesPage> {
+  int refresh = 0;
+  static const statuses = ['new', 'contacted', 'joined', 'closed'];
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('Trial enquiries')),
+        body: Load(
+          key: ValueKey(refresh),
+          fetch: () => Api.get('/api/site/enquiries'),
+          builder: (c, d, reload) {
+            final rows = L(d['enquiries']);
+            if (rows.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('No trial requests yet. Requests from the website form appear here.', textAlign: TextAlign.center)));
+            return RefreshIndicator(onRefresh: () async => setState(() => refresh++), child: ListView.separated(
+              padding: const EdgeInsets.all(16), itemCount: rows.length, separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (c, i) {
+                final e = rows[i];
+                final st = '${e['status']}';
+                return Card(child: ListTile(
+                  title: Row(children: [Expanded(child: Text('${e['name']}', style: const TextStyle(fontWeight: FontWeight.w700))), pill(st, st == 'new' ? flame : statusColor(st == 'joined' ? 'paid' : 'pending'))]),
+                  subtitle: Padding(padding: const EdgeInsets.only(top: 4), child: SelectableText([ '${e['phone']}', if (e['sport'] != null) '${e['sport']}', if (e['child_age'] != null) 'age ${e['child_age']}', '${e['created_at']}'.substring(0, 10), if (e['message'] != null) '${e['message']}' ].join('  |  '))),
+                  isThreeLine: e['message'] != null,
+                  trailing: const Icon(Icons.edit_outlined, size: 20),
+                  onTap: () async {
+                    final pick = await showModalBottomSheet<String>(context: c, showDragHandle: true, builder: (x) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Padding(padding: const EdgeInsets.all(8), child: Text('Mark ${e['name']} as', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
+                      for (final s2 in statuses) ListTile(title: Text(s2[0].toUpperCase() + s2.substring(1)), trailing: s2 == st ? const Icon(Icons.check) : null, onTap: () => Navigator.pop(x, s2)),
+                    ])));
+                    if (pick == null || pick == st || !c.mounted) return;
+                    if (await attempt(c, () => Api.send('PATCH', '/api/site/enquiries/${e['id']}', {'status': pick}), ok: 'Updated')) setState(() => refresh++);
+                  },
+                ));
+              },
+            ));
+          },
+        ),
+      );
 }

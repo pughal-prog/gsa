@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { App, all, one, run, ownerOnly, audit, num, str, putFile, getFile, deleteFiles, maxUpload } from '../lib'
+import { App, all, one, run, ownerOnly, audit, num, str, putFile, getFile, deleteFiles, maxUpload, sendMail } from '../lib'
 
 /** Public, no sign-in. Mounted at /public. */
 export const publicApi = new Hono<App>()
@@ -14,6 +14,11 @@ publicApi.post('/enquiry', async (c) => {
   if (recent && recent.n >= 40) return c.json({ error: 'Too many enquiries right now. Please call us instead.' }, 429)
   await run(c.env.DB, 'INSERT INTO enquiries (name, phone, sport_id, child_age, message) VALUES (?,?,?,?,?)',
     name.slice(0, 80), phone.slice(0, 20), b.sport_id ? num(b.sport_id) : null, str(b.child_age)?.slice(0, 20) ?? null, str(b.message)?.slice(0, 500) ?? null)
+  // tell the owner by email (only if Resend and OWNER_EMAIL are set); never blocks or fails the visitor
+  if (c.env.OWNER_EMAIL) {
+    const esc = (t: string) => t.replace(/[<>&]/g, '')
+    c.executionCtx.waitUntil(sendMail(c.env, c.env.OWNER_EMAIL, 'New trial request: ' + esc(name), `<p><b>${esc(name)}</b> asked for a trial class.</p><p>Phone: ${esc(phone)}<br>Child age: ${esc(str(b.child_age) ?? '-')}<br>Message: ${esc(str(b.message) ?? '-')}</p><p>See it in the app under Enquiries.</p>`).catch(() => false))
+  }
   return c.json({ ok: true }, 201)
 })
 

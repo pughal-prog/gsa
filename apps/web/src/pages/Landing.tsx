@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { Logo } from '../components/ui'
 import Carousel from '../components/Carousel'
+import ChatWidget from '../components/ChatWidget'
 import { API, useApi, useAuth } from '../lib'
 import { SITE, fullAddress, mapsUrl } from '../site'
 
@@ -402,8 +403,9 @@ export default function Landing() {
         </div>
       </footer>
 
-      {/* floating WhatsApp */}
-      <a href={`https://wa.me/${SITE.phoneIntl}`} target="_blank" rel="noreferrer" aria-label="Chat on WhatsApp" className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-leaf text-white shadow-lg shadow-black/30 transition hover:scale-105"><MessageCircle size={26} /></a>
+      {/* floating assistant (right) and WhatsApp (left) */}
+      <ChatWidget />
+      <a href={`https://wa.me/${SITE.phoneIntl}`} target="_blank" rel="noreferrer" aria-label="Chat on WhatsApp" className="fixed bottom-5 left-4 z-40 grid h-14 w-14 place-items-center rounded-full bg-leaf text-white shadow-lg shadow-black/30 transition hover:scale-105"><MessageCircle size={26} /></a>
 
       {open && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/85 p-4" onClick={() => setOpen(null)} role="dialog" aria-modal="true">

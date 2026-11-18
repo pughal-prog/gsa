@@ -4,6 +4,7 @@ import { SignJWT, jwtVerify, createRemoteJWKSet } from 'jose'
 export type Env = {
   DB: D1Database
   MEDIA?: R2Bucket
+  AI?: { run: (model: string, input: unknown) => Promise<any> } // optional Workers AI binding for the website assistant
   RESEND_API_KEY?: string
   OWNER_EMAIL?: string
   MAIL_FROM?: string
