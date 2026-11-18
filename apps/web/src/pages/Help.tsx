@@ -24,7 +24,7 @@ export default function Help() {
                 <div className="flex items-center gap-2 text-xs text-mute">{q.from_name && `${q.from_name} (${q.from_role}) · `}{fdate(q.created_at)}<Badge>{q.status}</Badge></div>
               </div>
               <p className="mt-2 text-sm text-slate-600">{q.message}</p>
-              {q.reply && <p className="mt-3 rounded-xl bg-soft p-3 text-sm"><span className="text-xs text-brand">Academy reply</span><br />{q.reply}</p>}
+              {q.reply && <p className="mt-3 rounded-md bg-soft p-3 text-sm"><span className="text-xs text-brand">Academy reply</span><br />{q.reply}</p>}
               {me?.role === 'owner' && <div className="mt-3"><Btn variant="ghost" className="py-1 text-xs" onClick={() => setReplying(q)}>Reply / close</Btn></div>}
             </Card>
           ))}

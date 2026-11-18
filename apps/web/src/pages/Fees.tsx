@@ -65,7 +65,7 @@ export default function Fees() {
             {me?.role === 'owner' && <Btn variant="ghost" onClick={async () => { const r = await api('/api/fees/generate-monthly', { method: 'POST', body: {} }); setMsg(`${r.created} monthly bills generated`); reload() }}>Generate monthly bills</Btn>}
             <Btn onClick={() => setAdding(true)}><Plus size={16} /> New bill</Btn></>}
           </div>)} />
-      {msg && <div className="mb-4 rounded-xl bg-brand/10 p-3 text-sm text-brand">{msg}</div>}
+      {msg && <div className="mb-4 rounded-md bg-brand/10 p-3 text-sm text-brand">{msg}</div>}
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <Stat label="Pending" value={inr(pending.reduce((a, f) => a + f.amount, 0))} tone="warn" hint={`${pending.length} bills`} />
         <Stat label="Overdue" value={inr(overdue.reduce((a, f) => a + f.amount, 0))} tone={overdue.length ? 'bad' : 'good'} hint={`${overdue.length} bills`} />

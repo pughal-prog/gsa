@@ -19,7 +19,7 @@ export function DeleteStudent({ s, onClose, onDone }: { s: { id: number; name: s
     <Modal title="Delete student" onClose={onClose}>
       <p className="text-sm text-slate-600">You are about to permanently delete <b>{s.name}</b> ({s.admission_no}), along with their login, attendance, fees, photos and notifications. This cannot be undone.</p>
       <label className="mt-4 block text-sm"><span className="mb-1 block text-xs text-mute">Type <b>{s.admission_no}</b> to confirm</span>
-        <input value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-danger" /></label>
+        <input value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus className="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-danger" /></label>
       {err && <div className="mt-3"><ErrorMsg text={err} /></div>}
       <div className="mt-5 flex justify-end gap-2">
         <Btn variant="ghost" onClick={onClose}>Cancel</Btn>

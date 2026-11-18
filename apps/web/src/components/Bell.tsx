@@ -33,7 +33,7 @@ export default function Bell({ className = '' }: { className?: string }) {
     nav('/app/notifications')
   }
   return (
-    <button onClick={click} aria-label={n ? `${n} unread notifications` : 'Notifications'} className={`relative rounded-lg p-2 hover:bg-soft ${className}`}>
+    <button onClick={click} aria-label={n ? `${n} unread notifications` : 'Notifications'} className={`relative rounded-md p-2 text-slate-400 hover:bg-white/10 hover:text-white lg:text-slate-400 ${className}`}>
       <BellIcon size={20} />
       {n > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-[18px] place-items-center rounded-full bg-flame px-1 text-[10px] font-bold leading-[18px] text-white">{n > 99 ? '99+' : n}</span>}
     </button>

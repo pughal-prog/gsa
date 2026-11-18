@@ -3,13 +3,13 @@ import { X } from 'lucide-react'
 import { API, getToken, cx } from '../lib'
 
 export const Card = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <div className={cx('rounded-2xl border border-line bg-surface p-5 shadow-card', className)}>{children}</div>
+  <div className={cx('rounded-lg border border-line bg-surface p-5', className)}>{children}</div>
 )
 
 export const PageHeader = ({ title, sub, action }: { title: string; sub?: string; action?: ReactNode }) => (
   <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
     <div>
-      <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>
       {sub && <p className="mt-1 text-sm text-mute">{sub}</p>}
     </div>
     {action}
@@ -17,8 +17,8 @@ export const PageHeader = ({ title, sub, action }: { title: string; sub?: string
 )
 
 export const Stat = ({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: string; tone?: 'good' | 'bad' | 'warn' }) => (
-  <Card className="rise">
-    <div className="text-xs uppercase tracking-wider text-mute">{label}</div>
+  <Card className="rise border-t-4 border-t-ink">
+    <div className="label text-mute">{label}</div>
     <div className={cx('mt-2 font-display text-3xl font-semibold', tone === 'good' && 'text-leaf', tone === 'bad' && 'text-danger', tone === 'warn' && 'text-warn')}>{value}</div>
     {hint && <div className="mt-1 text-xs text-mute">{hint}</div>}
   </Card>
@@ -30,20 +30,20 @@ const tones: Record<string, string> = {
   absent: 'bg-danger/10 text-danger', failed: 'bg-danger/10 text-danger', overdue: 'bg-danger/10 text-danger',
 }
 export const Badge = ({ children, tone }: { children: ReactNode; tone?: string }) => (
-  <span className={cx('inline-block rounded-full px-2.5 py-0.5 text-xs font-medium', tones[tone ?? String(children).toLowerCase()] ?? 'bg-softer text-slate-600')}>{children}</span>
+  <span className={cx('inline-block rounded-md px-2 py-0.5 text-xs font-semibold', tones[tone ?? String(children).toLowerCase()] ?? 'bg-softer text-slate-600')}>{children}</span>
 )
 
 export const Btn = ({ variant = 'primary', className, ...p }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'ghost' | 'danger' }) => (
   <button {...p} className={cx(
-    'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky',
-    variant === 'primary' && 'bg-brand text-white hover:bg-brand-dark',
+    'inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky',
+    variant === 'primary' && 'bg-ink text-white hover:bg-brand',
     variant === 'ghost' && 'border border-line bg-surface text-slate-700 hover:bg-soft',
     variant === 'danger' && 'bg-danger/10 text-danger hover:bg-danger/20', className)} />
 )
 
 export const Empty = ({ text }: { text: string }) => <div className="py-10 text-center text-sm text-mute">{text}</div>
 export const Loading = () => <div className="py-16 text-center text-sm text-mute">Loading...</div>
-export const ErrorMsg = ({ text }: { text: string }) => <div className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger" role="alert">{text}</div>
+export const ErrorMsg = ({ text }: { text: string }) => <div className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger" role="alert">{text}</div>
 
 export type Col<T> = { head: string; cell: (r: T) => ReactNode; className?: string }
 export function Table<T>({ cols, rows, onRow, empty = 'Nothing here yet' }: { cols: Col<T>[]; rows: T[]; onRow?: (r: T) => void; empty?: string }) {
@@ -51,7 +51,7 @@ export function Table<T>({ cols, rows, onRow, empty = 'Nothing here yet' }: { co
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead><tr className="border-b border-line text-xs uppercase tracking-wider text-mute">
+        <thead><tr className="border-b-2 border-ink/80 label text-ink">
           {cols.map((c) => <th key={c.head} className={cx('px-3 py-2 font-medium', c.className)}>{c.head}</th>)}
         </tr></thead>
         <tbody>
@@ -67,10 +67,10 @@ export function Table<T>({ cols, rows, onRow, empty = 'Nothing here yet' }: { co
 }
 
 export const Tabs = ({ tabs, value, onChange }: { tabs: string[]; value: string; onChange: (t: string) => void }) => (
-  <div className="mb-5 flex gap-1 overflow-x-auto rounded-xl border border-line bg-surface p-1" role="tablist">
+  <div className="mb-5 flex gap-6 overflow-x-auto border-b border-line" role="tablist">
     {tabs.map((t) => (
       <button key={t} role="tab" aria-selected={t === value} onClick={() => onChange(t)}
-        className={cx('whitespace-nowrap rounded-lg px-3.5 py-1.5 text-sm font-medium transition', t === value ? 'bg-brand text-white' : 'text-mute hover:text-slate-900')}>{t}</button>
+        className={cx('-mb-px whitespace-nowrap border-b-2 py-2.5 text-sm font-semibold transition', t === value ? 'border-flame text-ink' : 'border-transparent text-mute hover:text-ink')}>{t}</button>
     ))}
   </div>
 )
@@ -84,7 +84,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={onClose}>
       <div role="dialog" aria-modal="true" aria-label={title} onMouseDown={(e) => e.stopPropagation()}
-        className="max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-line bg-surface p-6 shadow-xl sm:max-w-xl sm:rounded-2xl">
+        className="max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-line bg-surface p-6 shadow-xl sm:max-w-xl sm:rounded-lg">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">{title}</h2>
           <button onClick={onClose} aria-label="Close" className="rounded-lg p-1 text-mute hover:bg-soft hover:text-slate-900"><X size={20} /></button>
@@ -110,7 +110,7 @@ export function FormModal({ title, fields, onClose, onSubmit, submitLabel = 'Sav
     setBusy(true); setErr('')
     try { await onSubmit(v); onClose() } catch (er: any) { setErr(er.message); setBusy(false) }
   }
-  const cls = 'w-full rounded-xl border border-line bg-soft px-3 py-2 text-sm outline-none focus:border-brand'
+  const cls = 'w-full rounded-md border border-line bg-soft px-3 py-2 text-sm outline-none focus:border-brand'
   return (
     <Modal title={title} onClose={onClose}>
       <form onSubmit={submit} className="grid grid-cols-1 gap-3 sm:grid-cols-2">

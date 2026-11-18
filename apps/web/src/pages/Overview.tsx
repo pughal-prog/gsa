@@ -104,7 +104,7 @@ export default function Overview() {
         <h2 className="mb-4 font-semibold">Recent achievements</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {d.recent.map((a: any, i: number) => (
-            <div key={i} className="rounded-xl bg-soft p-4">
+            <div key={i} className="rounded-md bg-soft p-4">
               <div className="text-sm font-semibold text-brand">{a.position} · {a.level}</div>
               <div className="mt-1 text-sm">{a.title}</div>
               <div className="mt-1 text-xs text-mute">{a.student} · {fdate(a.event_date)}</div>
