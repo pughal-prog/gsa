@@ -102,6 +102,8 @@ function TrialForm({ compact, sportList }: { compact?: boolean; sportList: { id:
   )
 }
 
+const APK_URL = 'https://github.com/pughal-prog/gsa/releases/latest/download/GlobalSportsAcademy.apk'
+
 export default function Landing() {
   const { me } = useAuth()
   const gallery = useApi<any>('/public/gallery')
@@ -284,8 +286,9 @@ export default function Landing() {
             </ol>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/signup" className="inline-flex items-center gap-2 rounded-lg bg-navy px-6 py-3.5 font-bold text-white hover:bg-navy2">Sign up now <ArrowRight size={18} /></Link>
-              <a href="https://github.com/pughal-prog/gsa/releases/latest" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-line px-6 py-3.5 font-semibold hover:border-brand hover:text-brand"><Smartphone size={18} /> Get the Android app</a>
+              <a href={APK_URL} download className="inline-flex items-center gap-2 rounded-lg bg-flame px-6 py-3.5 font-bold text-white hover:opacity-90"><Smartphone size={18} /> Download Android app (APK)</a>
             </div>
+            <p className="mt-3 text-xs text-mute">After downloading, open the file and allow "Install from this source" if Android asks. Works on Android 6 and above.</p>
           </Reveal>
           <div className="grid gap-4 sm:grid-cols-2">
             {features.map((f, i) => (
