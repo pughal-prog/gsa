@@ -5,7 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 WEB_ORIGIN = "https://globalsportsacademy.in"
-GOOGLE_CLIENT_ID = ""
+GOOGLE_CLIENT_ID = "1096600533188-a3sq311vksegnupn00u450ilhvpgqhd1.apps.googleusercontent.com"
 LATE_GRACE_MINUTES = "10"
 ACADEMY_NAME = "Global Sports Academy"
 

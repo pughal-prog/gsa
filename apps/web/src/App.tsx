@@ -5,6 +5,7 @@ import { useAuth, useApi, can, cx, Role } from './lib'
 import { Logo, Loading } from './components/ui'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
+import Privacy from './pages/Privacy'
 const Overview = lazy(() => import('./pages/Overview'))
 import Students from './pages/Students'
 import StudentDetail, { MyPassport } from './pages/StudentDetail'
@@ -108,6 +109,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/privacy" element={<Privacy />} />
       <Route path="/signup" element={<Login initial="signup" />} />
       <Route path="/app" element={<Shell />}>
         <Route index element={<AppHome />} />
