@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Plus, Zap } from 'lucide-react'
+import { FileDown } from 'lucide-react'
+import { exportPdf } from '../pdf'
 import { api, useApi, useAuth, can, inr, fdate } from '../lib'
 import { Card, PageHeader, Table, Btn, Loading, ErrorMsg, Badge, FormModal, Stat } from '../components/ui'
 
@@ -56,10 +58,12 @@ export default function Fees() {
   return (
     <>
       <PageHeader title="Fees" sub={isStudent ? 'Your bills and payments' : 'Billing and collections'}
-        action={can(me, 'fees.collect') && (
+        action={(
           <div className="flex gap-2">
+            <Btn variant="ghost" onClick={() => exportPdf({ title: 'Fees', head: ['Student', 'Description', 'Due', 'Amount', 'Status'], rows: fees.map((f: any) => [f.student || f.student_name || '-', f.description || f.title || '-', f.due_date, inr(f.amount), f.status]), filename: 'fees.pdf', share: true })}><FileDown size={16} /> PDF</Btn>
+            {can(me, 'fees.collect') && <>
             {me?.role === 'owner' && <Btn variant="ghost" onClick={async () => { const r = await api('/api/fees/generate-monthly', { method: 'POST', body: {} }); setMsg(`${r.created} monthly bills generated`); reload() }}>Generate monthly bills</Btn>}
-            <Btn onClick={() => setAdding(true)}><Plus size={16} /> New bill</Btn>
+            <Btn onClick={() => setAdding(true)}><Plus size={16} /> New bill</Btn></>}
           </div>)} />
       {msg && <div className="mb-4 rounded-xl bg-brand/10 p-3 text-sm text-brand">{msg}</div>}
       <div className="mb-4 grid gap-4 sm:grid-cols-3">

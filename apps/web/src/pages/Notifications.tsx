@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Megaphone } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Megaphone, FileDown } from 'lucide-react'
+import { exportPdf } from '../pdf'
 import { api, useApi, useAuth, fdate } from '../lib'
 import { Card, PageHeader, Table, Btn, Loading, ErrorMsg, Badge, FormModal, Empty } from '../components/ui'
 
@@ -8,13 +9,14 @@ export default function Notifications() {
   const { data, loading, error, reload } = useApi<any>('/api/notifications')
   const [open, setOpen] = useState(false)
   const [sent, setSent] = useState('')
+  useEffect(() => { if (data) api('/api/notifications/seen', { method: 'POST', body: {} }).then(() => window.dispatchEvent(new Event('gsa-seen'))).catch(() => {}) }, [data])
   if (loading) return <Loading />
   if (error) return <ErrorMsg text={error} />
   const rows: any[] = data.notifications
   return (
     <>
       <PageHeader title="Notifications" sub={me?.role === 'student' ? 'Alerts sent to your parent / guardian' : 'Everything sent to parents: check-ins, late, absence, fees'}
-        action={me?.role === 'owner' && <Btn onClick={() => setOpen(true)}><Megaphone size={16} /> Announce to all parents</Btn>} />
+        action={<div className="flex gap-2"><Btn variant="ghost" onClick={() => exportPdf({ title: 'Notifications', head: ['When', 'Student', 'Message'], rows: rows.map((n) => [fdate(n.created_at), n.student || 'All', `${n.title}: ${n.body}`]), filename: 'notifications.pdf' })}><FileDown size={16} /> PDF</Btn>{me?.role === 'owner' && <Btn onClick={() => setOpen(true)}><Megaphone size={16} /> Announce</Btn>}</div>} />
       {sent && <div className="mb-4 rounded-xl bg-brand/10 p-3 text-sm text-brand">{sent}</div>}
       <Card>
         {me?.role === 'student' ? (

@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, UserCog, Wallet, Receipt, Boxes, CalendarCheck, Bell, LifeBuoy, LogOut, Menu, X, IdCard, UserCheck, KeyRound, Images } from 'lucide-react'
+import { LayoutDashboard, Users, UserCog, Wallet, Receipt, Boxes, CalendarCheck, Bell, LifeBuoy, LogOut, Menu, X, IdCard, UserCheck, KeyRound, Images, Video } from 'lucide-react'
 import { useAuth, useApi, can, cx, Role } from './lib'
 import { Logo, Loading } from './components/ui'
 import Landing from './pages/Landing'
@@ -18,6 +18,8 @@ import Help from './pages/Help'
 import ChangePassword from './pages/ChangePassword'
 import Approvals from './pages/Approvals'
 import SiteContent from './pages/SiteContent'
+import Cameras from './pages/Cameras'
+import NotifBell from './components/Bell'
 
 type Item = { to: string; label: string; icon: any; show: (me: any) => boolean }
 const NAV: Item[] = [
@@ -27,6 +29,7 @@ const NAV: Item[] = [
   { to: '/app/students', label: 'Students', icon: Users, show: (m) => can(m, 'students.view') },
   { to: '/app/approvals', label: 'Approvals', icon: UserCheck, show: (m) => m.role === 'owner' },
   { to: '/app/website', label: 'Gallery', icon: Images, show: (m) => m.role === 'owner' },
+  { to: '/app/cctv', label: 'CCTV', icon: Video, show: (m) => m.role === 'owner' },
   { to: '/app/staff', label: 'Staff', icon: UserCog, show: (m) => m.role === 'owner' },
   { to: '/app/fees', label: 'Fees', icon: Receipt, show: (m) => m.role === 'student' || can(m, 'fees.view') },
   { to: '/app/finance', label: 'Finance', icon: Wallet, show: (m) => m.role === 'owner' },
@@ -74,14 +77,14 @@ function Shell() {
         <div className="stripe -mx-4 -mt-4 mb-3 h-1.5" />
         <NavLink to={home} className="mb-4 block"><Logo small className="mx-auto !h-28" /></NavLink>
         {nav}
-        <div className="mt-auto">{userBox}</div>
+        <div className="mt-auto"><div className="mb-2 flex justify-end"><NotifBell /></div>{userBox}</div>
       </aside>
       <div className="min-w-0">
         <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur lg:hidden">
           <div className="stripe h-1" />
           <div className="flex items-center justify-between px-4 py-2">
             <NavLink to={home}><Logo small className="!h-14" /></NavLink>
-            <button onClick={() => setOpen(!open)} aria-label="Menu" aria-expanded={open} className="rounded-lg p-2 hover:bg-soft">{open ? <X /> : <Menu />}</button>
+            <div className="flex items-center gap-1"><NotifBell /><button onClick={() => setOpen(!open)} aria-label="Menu" aria-expanded={open} className="rounded-lg p-2 hover:bg-soft">{open ? <X /> : <Menu />}</button></div>
           </div>
         </header>
         {open && (
@@ -118,6 +121,7 @@ export default function App() {
         <Route path="staff" element={<RoleGate roles={['owner']}><Staff /></RoleGate>} />
         <Route path="staff/:id" element={<RoleGate roles={['owner', 'staff']}><StaffDetail /></RoleGate>} />
         <Route path="approvals" element={<RoleGate roles={['owner']}><Approvals /></RoleGate>} />
+        <Route path="cctv" element={<RoleGate roles={['owner']}><Cameras /></RoleGate>} />
         <Route path="website" element={<RoleGate roles={['owner']}><SiteContent /></RoleGate>} />
         <Route path="fees" element={<Fees />} />
         <Route path="finance" element={<RoleGate roles={['owner']}><Finance /></RoleGate>} />

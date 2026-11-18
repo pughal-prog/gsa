@@ -3,7 +3,10 @@ import { SignJWT, jwtVerify, createRemoteJWKSet } from 'jose'
 
 export type Env = {
   DB: D1Database
-  MEDIA: R2Bucket
+  MEDIA?: R2Bucket
+  RESEND_API_KEY?: string
+  OWNER_EMAIL?: string
+  MAIL_FROM?: string
   JWT_SECRET: string
   WEB_ORIGIN: string
   GOOGLE_CLIENT_ID: string
@@ -146,3 +149,36 @@ export async function audit(c: Ctx, action: string, detail?: unknown) {
 
 export const num = (v: unknown, d = 0) => (Number.isFinite(Number(v)) ? Number(v) : d)
 export const str = (v: unknown) => (v === undefined || v === null || v === '' ? null : String(v).trim())
+
+// ---------- file storage: R2 when bound, otherwise D1 (free, no card) ----------
+const b64e = (buf: ArrayBuffer) => { let s = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s) }
+export const maxUpload = (env: Env) => (env.MEDIA ? 5 * 1024 * 1024 : 1_400_000)
+export async function putFile(env: Env, key: string, file: File) {
+  if (env.MEDIA) return void (await env.MEDIA.put(key, file.stream(), { httpMetadata: { contentType: file.type } }))
+  await run(env.DB, 'INSERT OR REPLACE INTO blobs (key, content_type, b64) VALUES (?,?,?)', key, file.type, b64e(await file.arrayBuffer()))
+}
+export async function getFile(env: Env, key: string): Promise<{ body: BodyInit; type: string } | null> {
+  const r = await one<{ content_type: string; b64: string }>(env.DB, 'SELECT content_type, b64 FROM blobs WHERE key = ?', key)
+  if (r) return { body: Uint8Array.from(atob(r.b64), (ch) => ch.charCodeAt(0)), type: r.content_type }
+  if (env.MEDIA) { const o = await env.MEDIA.get(key); if (o) return { body: o.body, type: o.httpMetadata?.contentType ?? 'image/jpeg' } }
+  return null
+}
+export async function deleteFiles(env: Env, keys: string[]) {
+  if (!keys.length) return
+  await env.DB.batch(keys.map((k) => env.DB.prepare('DELETE FROM blobs WHERE key = ?').bind(k)))
+  if (env.MEDIA) await env.MEDIA.delete(keys)
+}
+
+// ---------- signed one-click links (email approvals) ----------
+export async function sign(env: Env, msg: string) {
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(env.JWT_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  return [...new Uint8Array(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(msg)))].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+export async function sendMail(env: Env, to: string, subject: string, html: string) {
+  if (!env.RESEND_API_KEY) return false
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST', headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: env.MAIL_FROM || 'Global Sports Academy <onboarding@resend.dev>', to: [to], subject, html }),
+  })
+  return r.ok
+}

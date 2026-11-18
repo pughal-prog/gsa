@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { FileDown, Share2 } from 'lucide-react'
+import { exportPdf } from '../pdf'
 import { api, useApi } from '../lib'
 import { Card, PageHeader, Table, Btn, Loading, ErrorMsg, Badge } from '../components/ui'
 
@@ -15,7 +17,8 @@ export default function Attendance() {
   return (
     <>
       <PageHeader title="Attendance" sub="Biometric check-ins appear here live. Use manual marking only if the device is down."
-        action={<input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Date" className="rounded-xl border border-line bg-soft px-3 py-2 text-sm" />} />
+        action={<div className="flex flex-wrap items-center gap-2"><input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Date" className="rounded-xl border border-line bg-soft px-3 py-2 text-sm" />
+          {(['dl', 'share'] as const).map((m) => <Btn key={m} variant="ghost" onClick={() => exportPdf({ title: `Attendance ${date}`, subtitle: `${count('present')} present, ${count('late')} late, ${count('absent')} absent`, head: ['Admission', 'Student', 'Batch', 'Check-in', 'Status'], rows: rows.map((r) => [r.admission_no, r.name, r.batch_time, r.check_in || '-', r.status]), filename: `attendance-${date}.pdf`, share: m === 'share' })}>{m === 'dl' ? <><FileDown size={16} /> PDF</> : <><Share2 size={16} /> Share</>}</Btn>)}</div>} />
       <div className="mb-4 flex flex-wrap gap-2"><Badge tone="present">{count('present')} present</Badge><Badge tone="late">{count('late')} late</Badge><Badge tone="absent">{count('absent')} absent</Badge><Badge tone="pending">{count('pending')} not yet in</Badge></div>
       {msg && <div className="mb-3 rounded-xl bg-soft p-3 text-sm" role="status">{msg}</div>}
       <Card>

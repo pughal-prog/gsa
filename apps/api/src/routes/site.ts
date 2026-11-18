@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { App, all, one, run, ownerOnly, audit, num, str } from '../lib'
+import { App, all, one, run, ownerOnly, audit, num, str, putFile, getFile, deleteFiles, maxUpload } from '../lib'
 
 /** Public, no sign-in. Mounted at /public. */
 export const publicApi = new Hono<App>()
@@ -28,9 +28,9 @@ publicApi.get('/gallery', async (c) => {
 publicApi.get('/gallery/file/*', async (c) => {
   const key = decodeURIComponent(c.req.path.replace(/^.*\/gallery\/file\//, ''))
   if (!(await one(c.env.DB, 'SELECT 1 AS x FROM gallery WHERE r2_key = ?', key))) return c.notFound() // only published gallery photos
-  const obj = await c.env.MEDIA.get(key)
+  const obj = await getFile(c.env, key)
   if (!obj) return c.notFound()
-  return new Response(obj.body, { headers: { 'Content-Type': obj.httpMetadata?.contentType ?? 'image/jpeg', 'Cache-Control': 'public, max-age=86400' } })
+  return new Response(obj.body, { headers: { 'Content-Type': obj.type, 'Cache-Control': 'public, max-age=86400' } })
 })
 
 publicApi.get('/reviews', async (c) => {
@@ -85,9 +85,9 @@ siteApi.post('/site/gallery', ownerOnly, async (c) => {
   const file = form.get('file') as unknown as File | null
   if (!file || typeof file === 'string') return c.json({ error: 'file required' }, 400)
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return c.json({ error: 'Only JPEG, PNG or WebP images' }, 400)
-  if (file.size > 5 * 1024 * 1024) return c.json({ error: 'Max 5 MB per photo' }, 400)
+  if (file.size > maxUpload(c.env)) return c.json({ error: 'Photo too large' }, 400)
   const key = `gallery/${crypto.randomUUID()}.${file.type.split('/')[1]}`
-  await c.env.MEDIA.put(key, file.stream(), { httpMetadata: { contentType: file.type } })
+  await putFile(c.env, key, file)
   const sport = num(form.get('sport_id'))
   await run(c.env.DB, 'INSERT INTO gallery (sport_id, r2_key, caption) VALUES (?,?,?)', sport || null, key, str(form.get('caption')))
   await audit(c, 'gallery.add', { key })
@@ -97,6 +97,6 @@ siteApi.delete('/site/gallery/:id', ownerOnly, async (c) => {
   const g = await one<any>(c.env.DB, 'SELECT r2_key FROM gallery WHERE id = ?', num(c.req.param('id')))
   if (!g) return c.json({ error: 'Not found' }, 404)
   await run(c.env.DB, 'DELETE FROM gallery WHERE id = ?', num(c.req.param('id')))
-  await c.env.MEDIA.delete(g.r2_key)
+  await deleteFiles(c.env, [g.r2_key])
   return c.json({ ok: true })
 })

@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import {
-  App, Ctx, all, one, run, can, canSeeStudent, needPerm, ownerOnly, audit, hashPassword, tempPassword, str, num,
+  App, Ctx, all, one, run, can, canSeeStudent, needPerm, ownerOnly, audit, hashPassword, tempPassword, str, num, deleteFiles,
 } from '../lib'
 
 export const people = new Hono<App>()
@@ -40,7 +40,8 @@ people.get('/students', needPerm('students.view'), async (c) => {
       (SELECT group_concat(sp.name, ', ') FROM enrollments e JOIN sports sp ON sp.id = e.sport_id WHERE e.student_id = s.id AND e.active = 1) AS sports,
       (SELECT COALESCE(SUM(amount),0) FROM fees f WHERE f.student_id = s.id AND f.status = 'pending') AS pending_fees
     FROM students s ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY s.name LIMIT 500`, ...params)
-  return c.json({ students: rows })
+  const hide = a.role === 'staff' && !a.perms.includes('students.contact')
+  return c.json({ students: hide ? rows.map((r: any) => ({ ...r, parent_phone: null, parent_name: null })) : rows })
 })
 
 people.post('/students', needPerm('students.edit'), async (c) => {
@@ -92,8 +93,26 @@ people.delete('/students/:id', ownerOnly, async (c) => {
     c.env.DB.prepare('DELETE FROM queries WHERE user_id = ?').bind(s.user_id),
     c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(s.user_id),
   ])
-  if (keys.length) await c.env.MEDIA.delete(keys)
+  await deleteFiles(c.env, keys)
   await audit(c, 'student.delete', { id, admission_no: s.admission_no, name: s.name })
+  return c.json({ ok: true })
+})
+
+// ---------------- MEDICAL (owner, the student, or staff granted students.medical) ----------------
+const MED_BOOL = ['takes_medicine', 'has_allergy', 'had_surgery', 'bone_damage'] as const
+const MED_TEXT = ['medicine_details', 'allergy_details', 'surgery_details', 'bone_details', 'other_issues', 'blood_group', 'emergency_contact'] as const
+people.put('/students/:id/medical', async (c) => {
+  const a = c.get('auth')
+  const id = num(c.req.param('id'))
+  const mine = a.role === 'student' && a.refId === id
+  if (!(mine || a.role === 'owner' || (a.role === 'staff' && a.perms.includes('students.medical') && (await canSeeStudent(c, id))))) return c.json({ error: 'Forbidden' }, 403)
+  const b = await c.req.json<any>()
+  const vals = [...MED_BOOL.map((k) => (b[k] ? 1 : 0)), ...MED_TEXT.map((k) => str(b[k])?.slice(0, 500) ?? null)]
+  const cols = [...MED_BOOL, ...MED_TEXT]
+  await run(c.env.DB,
+    `INSERT INTO student_medical (student_id, ${cols.join(',')}, updated_at) VALUES (?,${cols.map(() => '?').join(',')}, datetime('now'))
+     ON CONFLICT(student_id) DO UPDATE SET ${cols.map((k) => `${k} = excluded.${k}`).join(',')}, updated_at = datetime('now')`, id, ...vals)
+  await audit(c, 'student.medical', { id })
   return c.json({ ok: true })
 })
 
@@ -195,8 +214,12 @@ export async function studentProfile(c: Ctx, id: number) {
       : Promise.resolve([]),
   ])
   if (a.role === 'student') delete student.biometric_id
+  if (a.role === 'staff' && !a.perms.includes('students.contact'))
+    for (const f of ['address', 'parent_name', 'parent_phone', 'parent_email', 'parent_occupation', 'identification_mark', 'birthplace']) student[f] = null
+  const seeMedical = a.role === 'owner' || a.role === 'student' || (a.role === 'staff' && a.perms.includes('students.medical'))
+  const medical = seeMedical ? await one<any>(db, 'SELECT * FROM student_medical WHERE student_id = ?', id) : null
   return {
-    student, enrollments, achievements, matches, academic, media, attendance, fees, equipment,
+    medical, canSeeMedical: seeMedical, student, enrollments, achievements, matches, academic, media, attendance, fees, equipment,
     attendanceSummary: {
       present: attendance.filter((x: any) => x.status === 'present').length,
       late: attendance.filter((x: any) => x.status === 'late').length,
@@ -222,7 +245,7 @@ people.post('/staff', ownerOnly, async (c) => {
   const pw = tempPassword()
   const u = await run(c.env.DB, "INSERT INTO users (username, email, password_hash, role, name) VALUES (?,?,?,'staff',?)",
     code, str(b.email), await hashPassword(pw), b.name)
-  const perms = Array.isArray(b.permissions) ? b.permissions : ['students.view', 'attendance.mark', 'achievements.edit', 'fees.view']
+  const perms = Array.isArray(b.permissions) ? b.permissions : ['students.view', 'attendance.mark']
   const s = await run(c.env.DB,
     `INSERT INTO staff (user_id, ${STAFF_FIELDS.join(',')}, permissions) VALUES (?,${STAFF_FIELDS.map(() => '?').join(',')},?)`,
     u.meta.last_row_id, ...STAFF_FIELDS.map((f) => (f === 'experience_years' ? num(b[f]) : str(b[f]))), JSON.stringify(perms))

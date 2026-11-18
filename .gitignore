@@ -6,5 +6,4 @@ dist
 *.log
 apps/api/migrations/seed.sql
 apps/mobile/.expo
-
-*.tar.gz
+gsa-update-*.tar.gz

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, Trash2 } from 'lucide-react'
+import { Plus, Search, Trash2, FileDown } from 'lucide-react'
+import { exportPdf } from '../pdf'
 import { api, useApi, useAuth, can, inr, age } from '../lib'
 import { Card, PageHeader, Table, Btn, Loading, ErrorMsg, Badge, AuthImg, FormModal, Modal } from '../components/ui'
 import { studentFields } from './StudentDetail'
@@ -19,7 +20,8 @@ export default function Students() {
   return (
     <>
       <PageHeader title="Students" sub={me?.role === 'staff' ? 'Students assigned to you' : 'All enrolled athletes'}
-        action={can(me, 'students.edit') && <Btn onClick={() => setAdding(true)}><Plus size={16} /> Add student</Btn>} />
+        action={<div className="flex gap-2"><Btn variant="ghost" onClick={() => exportPdf({ title: 'Student list', head: ['Admission', 'Name', 'Sports', 'Parent', 'Phone', 'Pending fees'], rows: (data?.students ?? []).map((s: any) => [s.admission_no, s.name, s.sports || '-', s.parent_name || '-', s.parent_phone || '-', inr(s.pending_fees)]), filename: 'students.pdf' })}><FileDown size={16} /> PDF</Btn>
+          {can(me, 'students.edit') && <Btn onClick={() => setAdding(true)}><Plus size={16} /> Add student</Btn>}</div>} />
       <Card>
         <div className="mb-4 flex flex-wrap gap-3">
           <div className="relative min-w-60 flex-1">

@@ -52,10 +52,45 @@ const Row = ({ k, v }: { k: string; v: any }) => (
   <div className="flex justify-between gap-4 border-b border-line/50 py-2 text-sm last:border-0"><span className="text-mute">{k}</span><span className="text-right">{v || '-'}</span></div>
 )
 
+const MED: [string, string, string][] = [
+  ['takes_medicine', 'medicine_details', 'Takes regular medicine'], ['has_allergy', 'allergy_details', 'Has any allergy'],
+  ['had_surgery', 'surgery_details', 'Has undergone surgery'], ['bone_damage', 'bone_details', 'Has any bone damage'],
+]
+function Medical({ d, reload }: { d: any; reload: () => void }) {
+  const { me } = useAuth()
+  const m = d.medical ?? {}
+  const canEdit = me?.role === 'owner' || me?.role === 'student' || can(me, 'students.medical')
+  const [v, setV] = useState<any>({ ...m })
+  const [msg, setMsg] = useState('')
+  const set = (k: string, x: any) => setV((o: any) => ({ ...o, [k]: x }))
+  const save = async () => { try { await api(`/api/students/${d.student.id}/medical`, { method: 'PUT', body: v }); setMsg('Saved'); reload() } catch (e: any) { setMsg(e.message) } }
+  const inp = 'w-full rounded-xl border border-line bg-soft px-3 py-2 text-sm'
+  return (
+    <Card>
+      <h2 className="mb-1 font-semibold">Medical information</h2>
+      <p className="mb-4 text-xs text-mute">Private. Only the owner and the student can see this unless the owner grants a coach access.</p>
+      <div className="space-y-4">
+        {MED.map(([flag, det, label]) => (
+          <div key={flag} className="rounded-xl border border-line p-3">
+            <label className="flex items-center gap-3 text-sm font-medium"><input type="checkbox" disabled={!canEdit} checked={!!v[flag]} onChange={(e) => set(flag, e.target.checked ? 1 : 0)} className="h-4 w-4" /> {label}</label>
+            {!!v[flag] && <textarea disabled={!canEdit} rows={2} placeholder="Details (name, since when, which bone, etc.)" value={v[det] ?? ''} onChange={(e) => set(det, e.target.value)} className={`${inp} mt-2`} />}
+          </div>
+        ))}
+        <label className="block text-sm font-medium">Any other health issues<textarea disabled={!canEdit} rows={2} value={v.other_issues ?? ''} onChange={(e) => set('other_issues', e.target.value)} className={`${inp} mt-1`} /></label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block text-sm font-medium">Blood group<input disabled={!canEdit} value={v.blood_group ?? ''} onChange={(e) => set('blood_group', e.target.value)} className={`${inp} mt-1`} /></label>
+          <label className="block text-sm font-medium">Emergency contact<input disabled={!canEdit} value={v.emergency_contact ?? ''} onChange={(e) => set('emergency_contact', e.target.value)} className={`${inp} mt-1`} /></label>
+        </div>
+      </div>
+      {canEdit && <div className="mt-4 flex items-center gap-3"><Btn onClick={save}>Save medical info</Btn>{msg && <span className="text-sm text-mute" role="status">{msg}</span>}</div>}
+    </Card>
+  )
+}
+
 function StudentView({ d, reload }: { d: any; reload: () => void }) {
   const { me } = useAuth()
   const s = d.student
-  const tabs = ['Passport', 'Personal', 'Sports', 'Achievements', 'Academics', 'Attendance', 'Fees', 'Equipment', 'Photos']
+  const tabs = ['Passport', 'Personal', ...(d.canSeeMedical ? ['Medical'] : []), 'Sports', 'Achievements', 'Academics', 'Attendance', 'Fees', 'Equipment', 'Photos']
   const [tab, setTab] = useState('Passport')
   const [modal, setModal] = useState<'edit' | 'enroll' | 'ach' | 'match' | 'acad' | 'delete' | null>(null)
   const edit = can(me, 'students.edit')
@@ -122,6 +157,8 @@ function StudentView({ d, reload }: { d: any; reload: () => void }) {
             <Row k="Biometric ID" v={s.biometric_id} /><Row k="Batch time" v={s.batch_time} /><Row k="Status" v={<Badge>{s.status}</Badge>} /></Card>}
         </div>
       )}
+
+      {tab === 'Medical' && <Medical d={d} reload={reload} />}
 
       {tab === 'Sports' && (
         <Card>
