@@ -1,38 +1,5 @@
 import { Hono } from 'hono'
-import { App, all, one, run, ownerOnly, audit, num, str, sign, sendMail, Env } from '../lib'
-
-/** CCTV camera list. Owner only. Streams are links to the academy's own camera or recorder (HLS, MJPEG, still image or embed). */
-export const cctv = new Hono<App>()
-const TYPES = ['hls', 'mjpeg', 'image', 'embed']
-cctv.get('/cameras', ownerOnly, async (c) => c.json({ cameras: await all(c.env.DB, 'SELECT * FROM cameras ORDER BY id') }))
-cctv.post('/cameras', ownerOnly, async (c) => {
-  const b = await c.req.json<any>()
-  const url = str(b.stream_url)
-  if (!str(b.name) || !url || !/^https:\/\//i.test(url)) return c.json({ error: 'Name and an https stream link are required' }, 400)
-  const type = TYPES.includes(b.stream_type) ? b.stream_type : 'hls'
-  const r = await run(c.env.DB, 'INSERT INTO cameras (name, location, stream_url, stream_type) VALUES (?,?,?,?)', str(b.name), str(b.location), url, type)
-  await audit(c, 'camera.add', { name: b.name })
-  return c.json({ id: r.meta.last_row_id }, 201)
-})
-cctv.patch('/cameras/:id', ownerOnly, async (c) => {
-  const b = await c.req.json<any>()
-  const id = num(c.req.param('id'))
-  if ('active' in b) await run(c.env.DB, 'UPDATE cameras SET active = ? WHERE id = ?', b.active ? 1 : 0, id)
-  if (b.name || b.location !== undefined || b.stream_url || b.stream_type) {
-    const cur = await one<any>(c.env.DB, 'SELECT * FROM cameras WHERE id = ?', id)
-    if (!cur) return c.json({ error: 'Not found' }, 404)
-    const url = str(b.stream_url) ?? cur.stream_url
-    if (!/^https:\/\//i.test(url)) return c.json({ error: 'Stream link must start with https://' }, 400)
-    await run(c.env.DB, 'UPDATE cameras SET name = ?, location = ?, stream_url = ?, stream_type = ? WHERE id = ?',
-      str(b.name) ?? cur.name, b.location !== undefined ? str(b.location) : cur.location, url, TYPES.includes(b.stream_type) ? b.stream_type : cur.stream_type, id)
-  }
-  return c.json({ ok: true })
-})
-cctv.delete('/cameras/:id', ownerOnly, async (c) => {
-  await run(c.env.DB, 'DELETE FROM cameras WHERE id = ?', num(c.req.param('id')))
-  await audit(c, 'camera.delete', { id: c.req.param('id') })
-  return c.json({ ok: true })
-})
+import { App, one, num, sign, sendMail, Env } from '../lib'
 
 // ---------- one-click approval from the owner's email ----------
 const page = (title: string, body: string) => new Response(

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 import 'api.dart';
 import 'main.dart';
 import 'notify.dart';
@@ -300,7 +299,6 @@ class MorePage extends StatelessWidget {
     Widget item(IconData i, String t, String sub, Widget page) => Card(child: ListTile(leading: Icon(i, color: brand), title: Text(t, style: const TextStyle(fontWeight: FontWeight.w600)), subtitle: Text(sub), trailing: const Icon(Icons.chevron_right),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => page))));
     return ListView(padding: const EdgeInsets.all(16), children: [
-      item(Icons.videocam_outlined, 'CCTV', 'Live camera view (owner only)', const CctvPage()), const SizedBox(height: 8),
       item(Icons.how_to_reg_outlined, 'Approvals', 'New students and coaches waiting', const ApprovalsPage()), const SizedBox(height: 8),
       item(Icons.inventory_2_outlined, 'Equipment shop', 'Stock by sport', const EquipmentPage()), const SizedBox(height: 8),
       item(Icons.lock_outline, 'Account', 'Password and sign out', Scaffold(appBar: AppBar(title: const Text('Account')), body: AccountPage(onSignOut: onSignOut))),
@@ -357,90 +355,6 @@ class EquipmentPage extends StatelessWidget {
           ]));
         },
       ));
-}
-
-// ---------- CCTV (owner only) ----------
-class CctvPage extends StatelessWidget {
-  const CctvPage({super.key});
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('CCTV')),
-        floatingActionButton: FloatingActionButton.extended(onPressed: () => _add(context), icon: const Icon(Icons.add), label: const Text('Add camera')),
-        body: Load(
-          fetch: () => Api.get('/api/cameras'),
-          builder: (c, d, reload) {
-            final cams = (d['cameras'] as List).where((x) => x['active'] == 1).toList();
-            if (cams.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('No cameras yet. Add the https stream link from your CCTV recorder.', textAlign: TextAlign.center)));
-            return ListView.separated(padding: const EdgeInsets.all(16), itemCount: cams.length, separatorBuilder: (_, __) => const SizedBox(height: 12), itemBuilder: (c, i) {
-              final cam = cams[i];
-              return Card(clipBehavior: Clip.antiAlias, child: Column(children: [
-                AspectRatio(aspectRatio: 16 / 9, child: CameraFeed(cam: cam)),
-                ListTile(title: Text(cam['name'], style: const TextStyle(fontWeight: FontWeight.w600)), subtitle: Text(s(cam['location'])),
-                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                    IconButton(icon: const Icon(Icons.fullscreen), onPressed: () => Navigator.push(c, MaterialPageRoute(builder: (_) => Scaffold(backgroundColor: Colors.black, appBar: AppBar(title: Text(cam['name'])), body: Center(child: AspectRatio(aspectRatio: 16 / 9, child: CameraFeed(cam: cam))))))),
-                    IconButton(icon: const Icon(Icons.delete_outline, color: flame), onPressed: () async { await Api.delete('/api/cameras/${cam['id']}'); reload(); }),
-                  ])),
-              ]));
-            });
-          },
-        ),
-      );
-
-  void _add(BuildContext context) {
-    final n = TextEditingController(), l = TextEditingController(), u = TextEditingController();
-    String type = 'hls';
-    showDialog(context: context, builder: (c) => StatefulBuilder(builder: (c, set) => AlertDialog(
-      title: const Text('Add camera'),
-      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(controller: n, decoration: const InputDecoration(labelText: 'Name')), const SizedBox(height: 8),
-        TextField(controller: l, decoration: const InputDecoration(labelText: 'Location')), const SizedBox(height: 8),
-        DropdownButtonFormField<String>(value: type, items: const [DropdownMenuItem(value: 'hls', child: Text('HLS (.m3u8)')), DropdownMenuItem(value: 'mjpeg', child: Text('MJPEG')), DropdownMenuItem(value: 'image', child: Text('Snapshot image'))], onChanged: (v) => set(() => type = v!)),
-        const SizedBox(height: 8), TextField(controller: u, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'Stream link (https://...)')),
-      ])),
-      actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')), FilledButton(onPressed: () async {
-        try { await Api.post('/api/cameras', {'name': n.text, 'location': l.text, 'stream_type': type, 'stream_url': u.text.trim()}); if (c.mounted) Navigator.pop(c); if (context.mounted) { Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CctvPage())); } } catch (e) { if (c.mounted) toast(c, '$e'); }
-      }, child: const Text('Save'))],
-    )));
-  }
-}
-
-class CameraFeed extends StatefulWidget {
-  final Map cam;
-  const CameraFeed({super.key, required this.cam});
-  @override
-  State<CameraFeed> createState() => _CameraFeedState();
-}
-
-class _CameraFeedState extends State<CameraFeed> {
-  VideoPlayerController? vc;
-  Timer? t;
-  int tick = 0;
-  bool err = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final type = widget.cam['stream_type'], url = widget.cam['stream_url'] as String;
-    if (type == 'hls') {
-      vc = VideoPlayerController.networkUrl(Uri.parse(url))
-        ..initialize().then((_) { vc!.setVolume(0); vc!.play(); if (mounted) setState(() {}); }).catchError((_) { if (mounted) setState(() => err = true); });
-    } else if (type == 'image') {
-      t = Timer.periodic(const Duration(seconds: 3), (_) { if (mounted) setState(() => tick++); });
-    }
-  }
-
-  @override
-  void dispose() { vc?.dispose(); t?.cancel(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) {
-    final type = widget.cam['stream_type'], url = widget.cam['stream_url'] as String;
-    Widget off = const ColoredBox(color: Colors.black, child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.videocam_off, color: Colors.white54), SizedBox(height: 6), Text('Camera offline', style: TextStyle(color: Colors.white54))])));
-    if (err) return off;
-    if (type == 'hls') return (vc != null && vc!.value.isInitialized) ? VideoPlayer(vc!) : const ColoredBox(color: Colors.black, child: Center(child: CircularProgressIndicator()));
-    final u = type == 'image' ? '$url${url.contains('?') ? '&' : '?'}t=$tick' : url;
-    return ColoredBox(color: Colors.black, child: Image.network(u, fit: BoxFit.contain, gaplessPlayback: true, errorBuilder: (_, __, ___) => off));
-  }
 }
 
 // ---------- account ----------
