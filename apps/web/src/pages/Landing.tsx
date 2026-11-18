@@ -112,8 +112,8 @@ function HeroCourt() {
   const [i, setI] = useState(0)
   useEffect(() => { const t = setInterval(() => setI((x) => (x + 1) % courtOf.length), 5200); return () => clearInterval(t) }, [])
   return (
-    <div className="pointer-events-none absolute -left-[4%] top-[6%] hidden w-[58%] opacity-[.13] lg:block" aria-hidden>
-      <CourtArt kind={courtOf[i]} />
+    <div className="pointer-events-none absolute -left-[4%] top-[6%] hidden w-[58%] opacity-[.10] lg:block" aria-hidden>
+      <CourtArt kind={courtOf[i]} className="ink" />
     </div>
   )
 }
@@ -199,9 +199,9 @@ export default function Landing() {
       <ScrollProgress />
       <CursorGlow />
       {/* announcement bar */}
-      <div className="bg-flame text-white">
+      <div className="bg-gold text-ink">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 px-4 py-2 text-center text-xs font-semibold sm:text-sm">
-          <span className="rounded bg-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">Admissions open</span>
+          <span className="rounded bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">Admissions open</span>
           <span>Fencing, table tennis, carrom, chess and fitness. Book a trial class today.</span>
           <a href="#trial" className="hidden underline underline-offset-2 sm:inline">Book now</a>
         </div>
@@ -233,28 +233,26 @@ export default function Landing() {
       </header>
 
       {/* hero */}
-      <Parallax className="contents"><section className="grain relative overflow-hidden bg-deep text-white">
-        {slides.length > 0 && <div data-speed="0.12" className="absolute inset-0"><Carousel slides={slides} interval={5200} className="absolute inset-0 opacity-30" /></div>}
-        <div className="absolute inset-0 bg-gradient-to-br from-deep via-deep/90 to-navy/70" />
-        <div data-speed="0.2" className="absolute inset-0"><div className="aurora" /></div>
+      <Parallax className="contents"><section onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`); e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`) }} className="hero-light grain relative overflow-hidden text-ink">
+        <div data-speed="0.1" className="absolute inset-0" aria-hidden>
+          <div className="blob b1" /><div className="blob b2" /><div className="blob b3" /><div className="blob b4" />
+        </div>
         <HeroCourt />
-        <div className="orb a" /><div className="orb b" /><div className="orb c" />
-        <div className="hero-grid absolute inset-0" />
         <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-4 pb-28 pt-14 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:pb-32 lg:pt-20">
           <div>
-            <Eyebrow light>Indoor sports academy · Namakkal</Eyebrow>
-            <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] sm:text-6xl" aria-label="Where young athletes train, compete and win."><SplitWords parts={["Where young athletes", { text: "train,", className: "text-sky" }, "compete and", { text: "win.", className: "text-gold" }]} /></h1>
-            <p className="mt-6 max-w-xl text-lg text-white/80">Five sports under one roof, certified coaching for every age category, and an app that keeps coaches, parents and students on the same page.</p>
+            <Eyebrow>Indoor sports academy · Namakkal</Eyebrow>
+            <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] sm:text-6xl" aria-label="Where young athletes train, compete and win."><SplitWords parts={["Where young athletes", { text: "train,", className: "grad-text" }, "compete and", { text: "win.", className: "grad-text" }]} /></h1>
+            <p className="mt-6 max-w-xl text-lg text-ink/70">Five sports under one roof, certified coaching for every age category, and an app that keeps coaches, parents and students on the same page.</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Magnetic><a href="#trial" className="inline-flex items-center gap-2 rounded-lg bg-flame px-6 py-3.5 font-bold shadow-lg shadow-black/20 transition hover:brightness-110">Book a trial class <ArrowRight size={18} /></a></Magnetic>
-              <a href={`tel:+${SITE.phoneIntl}`} className="inline-flex items-center gap-2 rounded-lg border border-white/40 px-6 py-3.5 font-semibold transition hover:bg-white/10"><Phone size={18} /> {SITE.phone}</a>
+              <Magnetic><a href="#trial" className="inline-flex items-center gap-2 rounded-lg bg-flame px-6 py-3.5 font-bold text-white shadow-lg shadow-flame/30 transition hover:brightness-110">Book a trial class <ArrowRight size={18} /></a></Magnetic>
+              <a href={`tel:+${SITE.phoneIntl}`} className="inline-flex items-center gap-2 rounded-lg border border-ink/20 bg-white/60 px-6 py-3.5 font-semibold backdrop-blur transition hover:bg-white"><Phone size={18} /> {SITE.phone}</a>
             </div>
-            <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/80">
-              {['Certified coaches', 'All age categories', 'Parent app with live alerts'].map((x) => <li key={x} className="flex items-center gap-2"><CheckCircle2 size={16} className="text-sky" />{x}</li>)}
+            <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink/70">
+              {['Certified coaches', 'All age categories', 'Parent app with live alerts'].map((x) => <li key={x} className="flex items-center gap-2"><CheckCircle2 size={16} className="text-leaf" />{x}</li>)}
             </ul>
           </div>
           {/* trial card */}
-          <div id="trial" className="gborder isolate rounded-2xl bg-white p-6 text-ink shadow-2xl shadow-black/30 sm:p-7">
+          <div id="trial" className="gborder isolate rounded-2xl bg-white p-6 text-ink shadow-2xl shadow-ink/15 sm:p-7">
             <div className="label text-flame">Free to ask, quick to answer</div>
             <h2 className="mt-1 text-2xl font-extrabold">Book a trial class</h2>
             <p className="mb-4 mt-1 text-sm text-mute">Leave your number and we will call you back.</p>

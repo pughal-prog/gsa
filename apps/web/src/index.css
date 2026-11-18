@@ -150,3 +150,26 @@ input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px
 /* big outline words that fill on hover */
 .outline-word { color: transparent; -webkit-text-stroke: 1.5px rgba(255,255,255,.55); transition: color .35s ease, -webkit-text-stroke-color .35s ease; }
 .outline-word:hover { color: var(--color-gold); -webkit-text-stroke-color: var(--color-gold); }
+
+/* ---------- light hero: liquid colour, no grid ---------- */
+.hero-light { background: #f5f7fa; --mx: 70%; --my: 30%; }
+.hero-light::before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(520px circle at var(--mx) var(--my), rgba(255,255,255,.85), transparent 62%); }
+.blob { position: absolute; filter: blur(64px); opacity: .6; will-change: transform, border-radius; animation: morph 16s ease-in-out infinite alternate; }
+.blob.b1 { width: 44vw; height: 44vw; left: -8vw; top: -12vw; background: rgba(245,184,46,.7); }
+.blob.b2 { width: 38vw; height: 38vw; right: -6vw; top: -6vw; background: rgba(227,27,35,.30); animation-duration: 20s; animation-delay: -6s; }
+.blob.b3 { width: 40vw; height: 40vw; right: 18vw; bottom: -18vw; background: rgba(0,160,224,.32); animation-duration: 18s; animation-delay: -3s; }
+.blob.b4 { width: 26vw; height: 26vw; left: 22vw; bottom: -8vw; background: rgba(30,138,60,.26); animation-duration: 22s; animation-delay: -9s; }
+@keyframes morph {
+  0%   { border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%; transform: translate3d(0, 0, 0) rotate(0deg); }
+  50%  { border-radius: 63% 37% 41% 59% / 55% 62% 38% 45%; transform: translate3d(3vw, 2vw, 0) rotate(40deg) scale(1.08); }
+  100% { border-radius: 38% 62% 52% 48% / 62% 38% 62% 38%; transform: translate3d(-2vw, 3vw, 0) rotate(-25deg) scale(.96); }
+}
+.grad-text { background: linear-gradient(90deg, var(--color-flame), #ff8a00, var(--color-gold), var(--color-flame)); background-size: 220% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: gshift 6s linear infinite; }
+@keyframes gshift { to { background-position: 220% center; } }
+.grain.hero-light::after { mix-blend-mode: multiply; opacity: .06; }
+.court.ink { color: rgba(11,18,32,.9); }
+.court.ink .gold { color: #d99200; stroke: #d99200; }
+@media (prefers-reduced-motion: reduce) { .blob, .grad-text { animation: none; } }
+.word.grad-text { animation: word-up .75s cubic-bezier(.2,.8,.2,1) forwards, gshift 6s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .word.grad-text { animation: none; transform: none; } }
