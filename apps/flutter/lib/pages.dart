@@ -25,7 +25,7 @@ class OverviewPage extends StatelessWidget {
           return RefreshIndicator(onRefresh: () async => reload(), child: ListView(padding: const EdgeInsets.all(16), children: [
             Reveal(child: Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF04152B), Color(0xFF0A3D7A)])),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0A0F24), Color(0xFF2540F2)])),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('Income this month', style: TextStyle(color: Colors.white70, fontSize: 13)),
                 const SizedBox(height: 6),
@@ -33,7 +33,7 @@ class OverviewPage extends StatelessWidget {
                 const SizedBox(height: 14),
                 Row(children: [
                   Expanded(child: Text('Expenses ${inr(nv(m['expense']))}', style: const TextStyle(color: Colors.white70, fontSize: 13))),
-                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFFF5B82E), shape: BoxShape.circle)),
+                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFFD9F24C), shape: BoxShape.circle)),
                   const SizedBox(width: 6),
                   Text('${nv(k['students']).round()} active students', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
                 ]),
@@ -264,7 +264,7 @@ class _EnquiriesPageState extends State<EnquiriesPage> {
                 return Reveal(index: i, child: Dismissible(
                   key: ValueKey('enq-${e['id']}-$st'),
                   background: swipeBg(leaf, Icons.phone_in_talk, 'Contacted', Alignment.centerLeft),
-                  secondaryBackground: swipeBg(const Color(0xFF5D6B86), Icons.check, 'Close', Alignment.centerRight),
+                  secondaryBackground: swipeBg(const Color(0xFF5B6480), Icons.check, 'Close', Alignment.centerRight),
                   confirmDismiss: (dir) async {
                     final to = dir == DismissDirection.startToEnd ? 'contacted' : 'closed';
                     HapticFeedback.mediumImpact();

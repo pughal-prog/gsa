@@ -37,7 +37,7 @@ class _WelcomeState extends State<Welcome> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(fit: StackFit.expand, children: [
-        Container(color: const Color(0xFF0B2A5B)),
+        Container(color: const Color(0xFF0A0F24)),
         if (photos.isNotEmpty)
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 1200),
@@ -50,7 +50,7 @@ class _WelcomeState extends State<Welcome> {
           tween: Tween(begin: 0, end: 1), duration: const Duration(seconds: 7), curve: Curves.easeInOut,
           builder: (c, v, _) => Container(decoration: BoxDecoration(gradient: LinearGradient(
             begin: Alignment(-1 + v * .6, -1), end: Alignment(1, 1),
-            colors: [const Color(0xFF062B57).withOpacity(.55), Colors.black.withOpacity(.35), Colors.black.withOpacity(.88)],
+            colors: [const Color(0xFF2540F2).withOpacity(.55), Colors.black.withOpacity(.35), Colors.black.withOpacity(.88)],
             stops: const [0, .45, 1]))),
         ),
         SafeArea(
@@ -58,10 +58,10 @@ class _WelcomeState extends State<Welcome> {
             padding: const EdgeInsets.all(24),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Spacer(),
-              Reveal(delay: const Duration(milliseconds: 100), child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(20)),
-                  child: const Text('Indoor sports academy · Namakkal', style: TextStyle(color: Colors.white, fontSize: 12)))),
+              Reveal(delay: const Duration(milliseconds: 100), child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: volt, borderRadius: BorderRadius.circular(20)),
+                  child: const Text('Indoor sports academy · Namakkal', style: TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w700)))),
               const SizedBox(height: 14),
-              const Reveal(delay: Duration(milliseconds: 220), child: Text('Global Sports\nAcademy', style: TextStyle(color: Colors.white, fontSize: 38, fontWeight: FontWeight.w800, height: 1.05))),
+              const Reveal(delay: Duration(milliseconds: 220), child: Text('Global Sports\nAcademy', style: TextStyle(color: Colors.white, fontSize: 46, fontWeight: FontWeight.w900, height: 1.0, letterSpacing: -1.2))),
               const SizedBox(height: 8),
               const Reveal(delay: Duration(milliseconds: 340), child: Text('Fencing · Table tennis · Carrom · Chess · Fitness', style: TextStyle(color: Colors.white70))),
               const SizedBox(height: 28),
@@ -161,7 +161,7 @@ class _SignInState extends State<SignIn> {
           onTap: busy ? null : google,
           child: Container(
             height: 50,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFD8D3C7))),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFD9DDEA))),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: const [
               Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF4285F4))),
               SizedBox(width: 10),

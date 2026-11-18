@@ -6,11 +6,13 @@ import 'home.dart';
 import 'login.dart';
 import 'motion.dart';
 
-const ink = Color(0xFF0B1220);
+const ink = Color(0xFF0A0F24);
 const brand = ink;
-const flame = Color(0xFFE31B23);
-const leaf = Color(0xFF1E8A3C);
-const paper = Color(0xFFF6F4EF);
+const royal = Color(0xFF2540F2);
+const volt = Color(0xFFD9F24C);
+const flame = Color(0xFFFF5A1F);
+const leaf = Color(0xFF0FA968);
+const paper = Color(0xFFF3F4F8);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,13 +45,13 @@ class _GsaAppState extends State<GsaApp> {
       theme: ThemeData(
         useMaterial3: true,
         pageTransitionsTheme: const PageTransitionsTheme(builders: {TargetPlatform.android: SlideFadeTransitions(), TargetPlatform.iOS: SlideFadeTransitions()}),
-        colorScheme: ColorScheme.fromSeed(seedColor: flame, primary: ink, secondary: flame, surface: Colors.white),
+        colorScheme: ColorScheme.fromSeed(seedColor: royal, primary: royal, secondary: flame, surface: Colors.white),
         scaffoldBackgroundColor: paper,
-        appBarTheme: const AppBarTheme(backgroundColor: paper, foregroundColor: ink, surfaceTintColor: Colors.transparent, elevation: 0, scrolledUnderElevation: 0, centerTitle: false, systemOverlayStyle: SystemUiOverlayStyle.dark, titleTextStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: ink, letterSpacing: -.3)),
-        navigationBarTheme: NavigationBarThemeData(backgroundColor: ink, indicatorColor: flame, iconTheme: WidgetStateProperty.resolveWith((st) => IconThemeData(color: st.contains(WidgetState.selected) ? Colors.white : Colors.white60)), labelTextStyle: WidgetStateProperty.resolveWith((st) => TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: st.contains(WidgetState.selected) ? Colors.white : Colors.white60))),
-        cardTheme: CardTheme(color: Colors.white, elevation: 0, margin: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Color(0xFFE6E2D8)))),
-        inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD8D3C7))), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF00A0E0), width: 2))),
-        filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: ink, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(52), textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)))),
+        appBarTheme: const AppBarTheme(backgroundColor: paper, foregroundColor: ink, surfaceTintColor: Colors.transparent, elevation: 0, scrolledUnderElevation: 0, centerTitle: false, systemOverlayStyle: SystemUiOverlayStyle.dark, titleTextStyle: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: ink, letterSpacing: -.6)),
+        navigationBarTheme: NavigationBarThemeData(backgroundColor: ink, indicatorColor: royal, iconTheme: WidgetStateProperty.resolveWith((st) => IconThemeData(color: st.contains(WidgetState.selected) ? Colors.white : Colors.white60)), labelTextStyle: WidgetStateProperty.resolveWith((st) => TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: st.contains(WidgetState.selected) ? Colors.white : Colors.white60))),
+        cardTheme: CardTheme(color: Colors.white, elevation: 0, margin: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Color(0xFFD9DDEA)))),
+        inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD9DDEA))), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2540F2), width: 2))),
+        filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: royal, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(52), textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)))),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: flame, foregroundColor: Colors.white),
         chipTheme: ChipThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
       ),

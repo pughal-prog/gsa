@@ -57,7 +57,7 @@ function Shell() {
     <nav className="flex flex-col gap-1" aria-label="Main">
       {items.map((n) => (
         <NavLink key={n.to} to={n.to} end={n.to === '/app'} onClick={() => setOpen(false)}
-          className={({ isActive }) => cx('group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition', isActive ? 'bg-gradient-to-r from-flame/25 via-white/5 to-transparent text-white shadow-[inset_3px_0_0_var(--color-flame)]' : 'text-slate-400 hover:bg-white/5 hover:text-white')}>
+          className={({ isActive }) => cx('group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition', isActive ? 'bg-brand text-white shadow-lg shadow-brand/30' : 'text-slate-400 hover:bg-white/5 hover:text-white')}>
           <n.icon size={18} className="transition-transform duration-200 group-hover:translate-x-0.5" /> <span className="flex-1">{n.label}</span>
           {n.to === '/app/approvals' && count > 0 && <span className="rounded-full bg-flame px-2 py-0.5 text-xs font-semibold text-white">{count}</span>}
         </NavLink>
@@ -67,7 +67,7 @@ function Shell() {
   const userBox = (
     <div className="border-t border-white/10 pt-4">
       <div className="flex items-center gap-3 px-2 pb-3">
-        <div className="grid h-9 w-9 place-items-center rounded-md bg-flame text-sm font-bold text-white">{me.name.slice(0, 1)}</div>
+        <div className="grid h-9 w-9 place-items-center rounded-md bg-gold text-sm font-bold text-ink">{me.name.slice(0, 1)}</div>
         <div className="min-w-0"><div className="truncate text-sm font-semibold text-white">{me.name}</div><div className="text-xs capitalize text-slate-400">{me.role}</div></div>
       </div>
       <NavLink to="/app/password" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-400 hover:bg-white/5 hover:text-white"><KeyRound size={18} /> Password</NavLink>
@@ -76,7 +76,7 @@ function Shell() {
   )
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className="sticky top-0 hidden h-screen flex-col overflow-y-auto bg-gradient-to-b from-deep to-ink p-4 lg:flex">
+      <aside className="sticky top-0 hidden h-screen flex-col overflow-y-auto bg-ink p-4 lg:flex">
         <NavLink to={home} className="mb-5 block rounded-lg bg-white p-2"><Logo small className="mx-auto !h-20" /></NavLink>
         {nav}
         <div className="mt-auto"><div className="mb-2 flex justify-end"><NotifBell /></div>{userBox}</div>

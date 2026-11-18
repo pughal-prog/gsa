@@ -76,7 +76,7 @@ class _AssistantPageState extends State<AssistantPage> {
           decoration: BoxDecoration(
             color: m.me ? ink : Colors.white,
             borderRadius: BorderRadius.circular(14),
-            border: m.me ? null : Border.all(color: const Color(0xFFE2DED4)),
+            border: m.me ? null : Border.all(color: const Color(0xFFD9DDEA)),
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             SelectableText(m.text, style: TextStyle(color: m.me ? Colors.white : ink, fontWeight: m.items.isNotEmpty ? FontWeight.w700 : FontWeight.w400, height: 1.35)),
@@ -94,14 +94,14 @@ class _AssistantPageState extends State<AssistantPage> {
           child: ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 14, 16, 8), children: [
             for (final m in msgs) _bubble(m),
             if (busy) const Align(alignment: Alignment.centerLeft, child: _TypingDots()),
-            if (!busy && chips.isNotEmpty) Wrap(spacing: 8, runSpacing: 8, children: [for (final c in chips) ActionChip(label: Text(c), onPressed: () => send(c), backgroundColor: Colors.white, side: const BorderSide(color: Color(0xFFD8D3C7)))]),
+            if (!busy && chips.isNotEmpty) Wrap(spacing: 8, runSpacing: 8, children: [for (final c in chips) ActionChip(label: Text(c), onPressed: () => send(c), backgroundColor: Colors.white, side: const BorderSide(color: Color(0xFFD9DDEA)))]),
           ]),
         ),
         SafeArea(
           top: false,
           child: Container(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-            decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFE2DED4)))),
+            decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFD9DDEA)))),
             child: Row(children: [
               Expanded(child: TextField(controller: ctl, textInputAction: TextInputAction.send, onSubmitted: send, maxLength: 300, decoration: const InputDecoration(hintText: 'Ask about your academy...', counterText: '', isDense: true))),
               const SizedBox(width: 8),
@@ -127,7 +127,7 @@ class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderState
   Widget build(BuildContext context) => Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE2DED4))),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFD9DDEA))),
         child: AnimatedBuilder(
           animation: c,
           builder: (context, _) {

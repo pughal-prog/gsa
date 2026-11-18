@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useApi, inr, fdate } from '../lib'
 import { Card, PageHeader, Stat, Loading, ErrorMsg, Badge } from '../components/ui'
 
-const COLORS = ['#0b4aa2', '#e31b23', '#1e8a3c', '#0aa5e8', '#f59e0b']
+const COLORS = ['#2540f2', '#ff5a1f', '#0fa968', '#6cb8ff', '#b8d200']
 const tip = { contentStyle: { background: '#ffffff', border: '1px solid #dde4f0', borderRadius: 12, color: '#0f1b33', boxShadow: '0 8px 24px -12px rgba(16,36,80,.25)' } }
 const label: Record<string, string> = { student_fee: 'Student fees', entry_fee: 'Entry fees', cash_prize: 'Cash prizes', equipment_sale: 'Equipment sales', other: 'Other' }
 
@@ -39,8 +39,8 @@ export default function Overview() {
                 <XAxis dataKey="month" stroke="#5d6b86" fontSize={12} />
                 <YAxis stroke="#5d6b86" fontSize={12} tickFormatter={(v) => `${v / 1000}k`} />
                 <Tooltip {...tip} formatter={(v: number) => inr(v)} />
-                <Bar dataKey="income" name="Income" fill="#0b4aa2" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="expense" name="Expense" fill="#e31b23" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="income" name="Income" fill="#2540f2" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="expense" name="Expense" fill="#ff5a1f" radius={[6, 6, 0, 0]} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -83,7 +83,7 @@ export default function Overview() {
                 <XAxis dataKey="period" stroke="#5d6b86" fontSize={11} />
                 <YAxis domain={[0, 100]} stroke="#5d6b86" fontSize={11} />
                 <Tooltip {...tip} />
-                <Bar dataKey="avg" fill="#0aa5e8" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="avg" fill="#6cb8ff" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

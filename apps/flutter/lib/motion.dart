@@ -82,7 +82,7 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
           blendMode: BlendMode.srcATop,
           shaderCallback: (r) => LinearGradient(
             begin: Alignment(-1.5 + c.value * 3, 0), end: Alignment(-0.5 + c.value * 3, 0),
-            colors: const [Color(0xFFE6E2D8), Color(0xFFF7F5EE), Color(0xFFE6E2D8)],
+            colors: const [Color(0xFFD9DDEA), Color(0xFFF3F4F8), Color(0xFFD9DDEA)],
           ).createShader(r),
           child: child,
         ),
@@ -93,7 +93,7 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
 class SkeletonList extends StatelessWidget {
   final int rows;
   const SkeletonList({super.key, this.rows = 6});
-  Widget _bar(double w, double h) => Container(width: w, height: h, decoration: BoxDecoration(color: const Color(0xFFE6E2D8), borderRadius: BorderRadius.circular(4)));
+  Widget _bar(double w, double h) => Container(width: w, height: h, decoration: BoxDecoration(color: const Color(0xFFD9DDEA), borderRadius: BorderRadius.circular(4)));
   @override
   Widget build(BuildContext context) => Shimmer(
         child: ListView(
@@ -104,9 +104,9 @@ class SkeletonList extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2DED4))),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFD9DDEA))),
                 child: Row(children: [
-                  Container(width: 40, height: 40, decoration: const BoxDecoration(color: Color(0xFFE6E2D8), shape: BoxShape.circle)),
+                  Container(width: 40, height: 40, decoration: const BoxDecoration(color: Color(0xFFD9DDEA), shape: BoxShape.circle)),
                   const SizedBox(width: 12),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_bar(150 + (i % 3) * 30, 12), const SizedBox(height: 8), _bar(90, 10)])),
                 ]),

@@ -48,7 +48,7 @@ class _StudentsPageState extends State<StudentsPage> {
 }
 
 /// Round initial used in the list and, via Hero, carried into the student screen.
-Widget initialAvatar(String name) => CircleAvatar(backgroundColor: flame, child: Text(name.isEmpty ? '?' : name.substring(0, 1).toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)));
+Widget initialAvatar(String name) => CircleAvatar(backgroundColor: royal, child: Text(name.isEmpty ? '?' : name.substring(0, 1).toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)));
 
 class StudentScreen extends StatelessWidget {
   final int id;

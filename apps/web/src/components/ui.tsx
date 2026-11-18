@@ -32,9 +32,9 @@ function animate(v: ReactNode): ReactNode {
 }
 
 export const Stat = ({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: string; tone?: 'good' | 'bad' | 'warn' }) => (
-  <Card className="rise lift border-t-4 border-t-ink">
+  <Card className="rise lift border-l-4 border-l-brand">
     <div className="label text-mute">{label}</div>
-    <div className={cx('mt-2 font-display text-3xl font-semibold', tone === 'good' && 'text-leaf', tone === 'bad' && 'text-danger', tone === 'warn' && 'text-warn')}>{animate(value)}</div>
+    <div className={cx('mt-2 font-display text-4xl font-extrabold', tone === 'good' && 'text-leaf', tone === 'bad' && 'text-danger', tone === 'warn' && 'text-warn')}>{animate(value)}</div>
     {hint && <div className="mt-1 text-xs text-mute">{hint}</div>}
   </Card>
 )
@@ -51,7 +51,7 @@ export const Badge = ({ children, tone }: { children: ReactNode; tone?: string }
 export const Btn = ({ variant = 'primary', className, ...p }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'ghost' | 'danger' }) => (
   <button {...p} className={cx(
     'rip inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky',
-    variant === 'primary' && 'bg-ink text-white hover:bg-brand',
+    variant === 'primary' && 'bg-brand text-white hover:bg-brand-dark',
     variant === 'ghost' && 'border border-line bg-surface text-slate-700 hover:bg-soft',
     variant === 'danger' && 'bg-danger/10 text-danger hover:bg-danger/20', className)} />
 )
@@ -72,7 +72,7 @@ export function Table<T>({ cols, rows, onRow, empty = 'Nothing here yet' }: { co
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead><tr className="border-b-2 border-ink/80 label text-ink">
+        <thead><tr className="border-b-2 border-ink label text-ink">
           {cols.map((c) => <th key={c.head} className={cx('px-3 py-2 font-medium', c.className)}>{c.head}</th>)}
         </tr></thead>
         <tbody className="stagger">

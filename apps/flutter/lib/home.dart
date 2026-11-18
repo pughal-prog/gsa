@@ -109,7 +109,7 @@ class FloatNav extends StatelessWidget {
                 curve: Curves.easeOutCubic,
                 width: i == index ? selW : otherW,
                 height: 48,
-                decoration: BoxDecoration(color: i == index ? flame : Colors.transparent, borderRadius: BorderRadius.circular(18)),
+                decoration: BoxDecoration(color: i == index ? royal : Colors.transparent, borderRadius: BorderRadius.circular(18)),
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   AnimatedScale(scale: i == index ? 1.08 : 1, duration: const Duration(milliseconds: 320), curve: Curves.easeOutBack, child: Icon(items[i].$2, size: 22, color: i == index ? Colors.white : Colors.white60)),
                   if (i == index) ...[

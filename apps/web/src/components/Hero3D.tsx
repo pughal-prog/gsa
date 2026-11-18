@@ -25,10 +25,10 @@ export default function Hero3D({ className = '' }: { className?: string }) {
     const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100)
     camera.position.set(0, 0, 11)
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xcfd8e8, 1.1))
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x3b50ff, 1.1))
     const key = new THREE.DirectionalLight(0xffffff, 2.4); key.position.set(4, 6, 8); scene.add(key)
-    const rim = new THREE.PointLight(0x00a0e0, 60, 30); rim.position.set(-6, -2, 4); scene.add(rim)
-    const warm = new THREE.PointLight(0xf5b82e, 50, 30); warm.position.set(6, -4, 3); scene.add(warm)
+    const rim = new THREE.PointLight(0x9ab0ff, 60, 30); rim.position.set(-6, -2, 4); scene.add(rim)
+    const warm = new THREE.PointLight(0xd9f24c, 50, 30); warm.position.set(6, -4, 3); scene.add(warm)
 
     const mat = (color: number, rough = 0.28, metal = 0.1) => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal })
     const floaters: { obj: THREE.Object3D; base: THREE.Vector3; spin: THREE.Vector3; phase: number; amp: number }[] = []
@@ -40,18 +40,18 @@ export default function Hero3D({ className = '' }: { className?: string }) {
     // chess pawn (lathe profile + head)
     const pawn = new THREE.Group()
     const prof = [[0, 0], [0.9, 0], [0.9, 0.18], [0.6, 0.32], [0.38, 1.1], [0.62, 1.2], [0.62, 1.36], [0.3, 1.42]].map(([x, y]) => new THREE.Vector2(x, y))
-    const body = new THREE.Mesh(new THREE.LatheGeometry(prof, 48), mat(0xe31b23, 0.22, 0.15))
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.46, 40, 40), mat(0xe31b23, 0.22, 0.15)); head.position.y = 1.78
+    const body = new THREE.Mesh(new THREE.LatheGeometry(prof, 48), mat(0xff5a1f, 0.22, 0.15))
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.46, 40, 40), mat(0xff5a1f, 0.22, 0.15)); head.position.y = 1.78
     pawn.add(body, head); pawn.scale.setScalar(1.15)
     add(pawn, 2.3, -0.6, 0, [0, 0.4, 0], 0.22)
 
     // table tennis ball
-    add(new THREE.Mesh(new THREE.SphereGeometry(0.62, 48, 48), mat(0xf5b82e, 0.35, 0.05)), -1.0, 2.0, 1.4, [0.2, 0.3, 0], 0.35)
+    add(new THREE.Mesh(new THREE.SphereGeometry(0.62, 48, 48), mat(0xd9f24c, 0.35, 0.05)), -1.0, 2.0, 1.4, [0.2, 0.3, 0], 0.35)
 
     // carrom striker: disc with a gold ring
     const striker = new THREE.Group()
-    striker.add(new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.22, 64), mat(0x062b57, 0.3, 0.2)))
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.06, 20, 64), mat(0xf5b82e, 0.25, 0.6)); ring.rotation.x = Math.PI / 2; ring.position.y = 0.12
+    striker.add(new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.22, 64), mat(0x0a0f24, 0.3, 0.2)))
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.06, 20, 64), mat(0xd9f24c, 0.25, 0.6)); ring.rotation.x = Math.PI / 2; ring.position.y = 0.12
     striker.add(ring); striker.rotation.x = 0.9
     add(striker, -2.2, -1.7, 0.6, [0.15, 0.5, 0.1], 0.3)
 
@@ -59,7 +59,7 @@ export default function Hero3D({ className = '' }: { className?: string }) {
     const blade = new THREE.Group()
     const steel = mat(0xd8dee9, 0.18, 0.9)
     const b = new THREE.Mesh(new THREE.BoxGeometry(0.09, 4.1, 0.03), steel); b.position.y = 2.15
-    const guard = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 16, 40), mat(0xf5b82e, 0.25, 0.7)); guard.rotation.x = Math.PI / 2; guard.position.y = 0.1
+    const guard = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 16, 40), mat(0xd9f24c, 0.25, 0.7)); guard.rotation.x = Math.PI / 2; guard.position.y = 0.1
     const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.1, 0.95, 24), mat(0x0b1220, 0.5, 0.1)); grip.position.y = -0.4
     const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.16, 24, 24), steel); pommel.position.y = -0.95
     blade.add(b, guard, grip, pommel); blade.rotation.z = -0.9; blade.scale.setScalar(0.95)
@@ -77,7 +77,7 @@ export default function Hero3D({ className = '' }: { className?: string }) {
       const w = el.clientWidth || 600, h = el.clientHeight || 520
       renderer.setSize(w, h, false)
       camera.aspect = w / h
-      camera.position.z = w < 520 ? 17 : 14
+      camera.position.z = w < 520 ? 15 : 12.5
       camera.updateProjectionMatrix()
     }
     size()

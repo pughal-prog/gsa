@@ -7,7 +7,7 @@ import {
 import { Logo } from '../components/ui'
 import Carousel from '../components/Carousel'
 import ChatWidget from '../components/ChatWidget'
-import { CountUp, Tilt, Magnetic, SplitWords, ScrollProgress, useScrolled, CursorGlow, Parallax, Squiggle } from '../components/fx'
+import { CountUp, Tilt, Magnetic, SplitWords, ScrollProgress, useScrolled, CursorGlow, Squiggle } from '../components/fx'
 import { CourtArt, CourtKind } from '../components/court'
 const Hero3D = lazy(() => import('../components/Hero3D'))
 import { API, useApi, useAuth } from '../lib'
@@ -61,7 +61,7 @@ function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; 
   return <div ref={ref} className={`reveal ${className}`} style={{ transitionDelay: `${delay}ms` }}>{children}</div>
 }
 const Eyebrow = ({ children, light }: { children: ReactNode; light?: boolean }) => (
-  <div className={`label inline-flex items-center gap-2 ${light ? 'text-sky' : 'text-flame'}`}><span className={`h-0.5 w-6 ${light ? 'bg-sky' : 'bg-flame'}`} />{children}</div>
+  <div className={`label ${light ? 'text-sky' : 'text-brand'}`}>{children}</div>
 )
 
 function TrialForm({ compact, bar, sportList }: { compact?: boolean; bar?: boolean; sportList: { id: number; name: string }[] }) {
@@ -108,13 +108,13 @@ function TrialForm({ compact, bar, sportList }: { compact?: boolean; bar?: boole
 
 const courtOf: CourtKind[] = ['fencing', 'table', 'carrom', 'chess', 'fitness']
 
-/** Hero backdrop: the playing surface of each sport draws itself in turn. */
+/** Hero panel backdrop: the playing surface of each sport draws itself in turn. */
 function HeroCourt() {
   const [i, setI] = useState(0)
   useEffect(() => { const t = setInterval(() => setI((x) => (x + 1) % courtOf.length), 5200); return () => clearInterval(t) }, [])
   return (
-    <div className="pointer-events-none absolute -left-[4%] top-[6%] hidden w-[58%] opacity-[.10] lg:block" aria-hidden>
-      <CourtArt kind={courtOf[i]} className="ink" />
+    <div className="pointer-events-none absolute inset-0 grid place-items-center p-6" aria-hidden>
+      <div key={i} className="w-full"><CourtArt kind={courtOf[i]} /></div>
     </div>
   )
 }
@@ -139,7 +139,7 @@ function PinnedSports({ photos }: { photos: any[] }) {
   const cur = sports[i]
   const ph = photos.filter((p) => p.sport === cur.name).slice(0, 6)
   return (
-    <section id="sports" ref={ref} className="relative hidden bg-deep text-white lg:block" style={{ height: `${sports.length * 85 + 15}vh` }}>
+    <section id="sports" ref={ref} className="relative hidden bg-ink text-white lg:block" style={{ height: `${sports.length * 85 + 15}vh` }}>
       <div className="sticky top-0 grid h-screen grid-cols-[1fr_1.1fr] items-center gap-10 overflow-hidden px-8 xl:px-16">
         <div className="aurora" />
         <div className="relative z-10 max-w-xl">
@@ -196,15 +196,15 @@ export default function Landing() {
   const nav = [['Sports', '#sports'], ['Programmes', '#programmes'], ['App', '#platform'], ['Gallery', '#gallery'], ['Reviews', '#reviews'], ['Contact', '#contact']]
 
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen bg-page text-ink">
       <ScrollProgress />
       <CursorGlow />
       {/* announcement bar */}
-      <div className="bg-gold text-ink">
-        <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 px-4 py-2 text-center text-xs font-semibold sm:text-sm">
-          <span className="rounded bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">Admissions open</span>
-          <span>Fencing, table tennis, carrom, chess and fitness. Book a trial class today.</span>
-          <a href="#trial" className="hidden underline underline-offset-2 sm:inline">Book now</a>
+      <div className="bg-ink text-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 px-4 py-2 text-center text-xs font-medium sm:text-sm">
+          <span className="rounded bg-gold px-2 py-0.5 text-[11px] font-bold text-ink">Admissions open</span>
+          <span className="text-white/80">Fencing, table tennis, carrom, chess and fitness. Book a trial class today.</span>
+          <a href="#trial" className="hidden font-semibold text-gold underline-offset-2 hover:underline sm:inline">Book now</a>
         </div>
       </div>
 
@@ -216,10 +216,10 @@ export default function Landing() {
             {nav.map(([t, h]) => <a key={t} href={h} className="transition hover:text-brand">{t}</a>)}
           </nav>
           <div className="flex items-center gap-2">
-            {me ? <Link to="/app" className="rounded-lg bg-navy px-4 py-2 text-sm font-bold text-white hover:bg-navy2">Open dashboard</Link> : (
+            {me ? <Link to="/app" className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-dark">Open dashboard</Link> : (
               <>
                 <Link to="/login" className="hidden rounded-lg border border-line px-4 py-2 text-sm font-semibold hover:border-brand hover:text-brand sm:inline-block">Sign in</Link>
-                <Link to="/signup" className="rounded-lg bg-navy px-4 py-2 text-sm font-bold text-white hover:bg-navy2">Join now</Link>
+                <Link to="/signup" className="rounded-lg bg-brand px-4 py-2 text-sm font-bold text-white hover:bg-brand-dark">Join now</Link>
               </>
             )}
             <button className="rounded-lg border border-line p-2 lg:hidden" aria-label="Menu" aria-expanded={menu} onClick={() => setMenu((x) => !x)}>{menu ? <X size={20} /> : <Menu size={20} />}</button>
@@ -234,39 +234,40 @@ export default function Landing() {
       </header>
 
       {/* hero */}
-      <Parallax className="contents"><section onMouseMove={(e) => { const r = e.currentTarget.getBoundingClientRect(); e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`); e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`) }} className="hero-light grain relative overflow-hidden text-ink">
-        <div data-speed="0.1" className="absolute inset-0" aria-hidden>
-          <div className="blob b1" /><div className="blob b2" /><div className="blob b3" /><div className="blob b4" />
-        </div>
-        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-4 px-4 pb-44 pt-12 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:pb-48 lg:pt-16">
+      <section className="hero-light relative overflow-hidden text-ink">
+        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-10 px-4 pb-52 pt-10 sm:px-8 lg:grid-cols-[1.12fr_0.88fr] lg:pb-56 lg:pt-14">
           <div>
-            <Eyebrow>Indoor sports academy · Namakkal</Eyebrow>
-            <h1 className="mt-5 text-5xl font-extrabold leading-[1.02] sm:text-7xl" aria-label="Where young athletes train, compete and win."><SplitWords parts={["Where young athletes", { text: "train,", className: "grad-text" }, "compete and", { text: "win.", className: "grad-text" }]} /></h1>
-            <p className="mt-6 max-w-xl text-lg text-ink/70">Five sports under one roof, certified coaching for every age category, and an app that keeps coaches, parents and students on the same page.</p>
+            <div className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-sm font-semibold text-ink2"><span className="h-2 w-2 rounded-full bg-flame" />Indoor sports academy, Namakkal</div>
+            <h1 className="mt-6 text-[clamp(2.7rem,6vw,5.6rem)] font-extrabold leading-[.92] tracking-tight" aria-label="Where young athletes train, compete and win."><SplitWords parts={["Where young athletes train,", "compete and win."]} /></h1>
+            <p className="mt-7 max-w-xl text-lg leading-relaxed text-ink2/75">Five sports under one roof, certified coaching for every age category, and an app that keeps coaches, parents and students on the same page.</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Magnetic><a href="#trial" className="rip inline-flex items-center gap-2 rounded-lg bg-flame px-6 py-3.5 font-bold text-white shadow-lg shadow-flame/30 transition hover:brightness-110">Book a trial class <ArrowRight size={18} /></a></Magnetic>
-              <Magnetic><a href={`tel:+${SITE.phoneIntl}`} className="rip inline-flex items-center gap-2 rounded-lg border border-ink/20 bg-white/60 px-6 py-3.5 font-semibold backdrop-blur transition hover:bg-white"><Phone size={18} /> {SITE.phone}</a></Magnetic>
+              <Magnetic><a href={`tel:+${SITE.phoneIntl}`} className="rip inline-flex items-center gap-2 rounded-lg border border-ink/20 bg-white px-6 py-3.5 font-semibold transition hover:border-brand hover:text-brand"><Phone size={18} /> {SITE.phone}</a></Magnetic>
             </div>
-            <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink/70">
+            <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink2/75">
               {['Certified coaches', 'All age categories', 'Parent app with live alerts'].map((x) => <li key={x} className="flex items-center gap-2"><CheckCircle2 size={16} className="text-leaf" />{x}</li>)}
             </ul>
           </div>
-          <div className="relative h-[340px] sm:h-[460px] lg:h-[540px]">
-            <Suspense fallback={null}><Hero3D className="absolute inset-0" /></Suspense>
+          <div className="panel-arena relative h-[360px] overflow-hidden rounded-[2rem] shadow-2xl shadow-brand/30 sm:h-[440px] lg:h-[540px]">
+            <div className="absolute inset-0 opacity-40" aria-hidden><HeroCourt /></div>
+            <Suspense fallback={null}><Hero3D className="absolute inset-0 z-[2]" /></Suspense>
+            <div className="absolute bottom-4 left-4 z-[3] flex gap-2 text-xs font-bold">
+              <span className="rounded-full bg-gold px-3 py-1.5 text-ink">5 sports</span>
+              <span className="rounded-full bg-white/15 px-3 py-1.5 text-white backdrop-blur">4 age groups</span>
+            </div>
           </div>
         </div>
         {/* booking bar */}
         <div id="trial" className="absolute inset-x-0 bottom-10 z-20 mx-auto max-w-6xl scroll-mt-24 px-4 sm:px-8">
           <div className="glass-card rounded-2xl p-4 sm:p-5">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-xl font-extrabold">Book a trial class</h2>
+              <h2 className="text-2xl font-extrabold">Book a trial class</h2>
               <p className="text-sm text-mute">Leave your number and we will call you back to confirm a batch.</p>
             </div>
             <TrialForm bar compact sportList={sportList} />
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 z-10 h-1.5 bg-gradient-to-r from-flame via-sky to-leaf" />
-      </section></Parallax>
+      </section>
 
       {/* facts strip overlapping the hero */}
       <div className="relative z-20 mx-auto mt-8 max-w-6xl px-4 sm:px-8">
