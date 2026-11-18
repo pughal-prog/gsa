@@ -2,7 +2,7 @@
 
 @theme {
   --font-sans: "DM Sans", system-ui, sans-serif;
-  --font-display: "Sora", "DM Sans", sans-serif;
+  --font-display: "Bricolage Grotesque", "DM Sans", sans-serif;
   /* Palette taken from the academy logo: blue, red, green, sky */
   --color-page: #f6f4ef;
   --color-ink: #0b1220;
@@ -17,6 +17,7 @@
   --color-leaf: #1e8a3c;
   --color-sky: #00a0e0;
   --color-navy: #062b57;
+  --color-deep: #04152b;
   --color-navy2: #0a3d7a;
   --color-gold: #f5b82e;
   --color-mute: #5d6b86;
@@ -137,3 +138,15 @@ input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px
 @keyframes draw { to { stroke-dashoffset: 0; } }
 
 @media (prefers-reduced-motion: reduce) { .orb, .gborder::before { animation: none; } .squiggle path { stroke-dashoffset: 0; } .cursor-glow { display: none; } }
+
+/* ---------- court line art ---------- */
+.court { color: rgba(255,255,255,.85); overflow: visible; }
+.court .gold { color: var(--color-gold); stroke: var(--color-gold); }
+.court rect, .court line, .court circle, .court path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.5s cubic-bezier(.6,.1,.2,1) forwards; }
+.court > *:nth-child(2) { animation-delay: .12s; } .court > *:nth-child(3) { animation-delay: .24s; } .court > *:nth-child(4) { animation-delay: .36s; }
+.court > *:nth-child(n+5) { animation-delay: .5s; }
+@media (prefers-reduced-motion: reduce) { .court rect, .court line, .court circle, .court path { animation: none; stroke-dashoffset: 0; } }
+
+/* big outline words that fill on hover */
+.outline-word { color: transparent; -webkit-text-stroke: 1.5px rgba(255,255,255,.55); transition: color .35s ease, -webkit-text-stroke-color .35s ease; }
+.outline-word:hover { color: var(--color-gold); -webkit-text-stroke-color: var(--color-gold); }

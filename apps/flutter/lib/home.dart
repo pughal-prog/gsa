@@ -66,10 +66,54 @@ class _HomeState extends State<Home> {
         ],
       ),
       body: AnimatedSwitcher(duration: const Duration(milliseconds: 260), switchInCurve: Curves.easeOutCubic, transitionBuilder: (w, a) => FadeTransition(opacity: a, child: SlideTransition(position: Tween(begin: const Offset(0, 0.015), end: Offset.zero).animate(a), child: w)), child: KeyedSubtree(key: ValueKey(tab), child: pages[tab].$3)),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: tab,
-        onDestinationSelected: (i) { HapticFeedback.selectionClick(); setState(() => tab = i); },
-        destinations: [for (final p in pages) NavigationDestination(icon: Icon(p.$2), label: p.$1)],
+      bottomNavigationBar: FloatNav(
+        index: tab,
+        items: [for (final p in pages) (p.$1, p.$2)],
+        onTap: (i) { HapticFeedback.selectionClick(); setState(() => tab = i); },
+      ),
+    );
+  }
+}
+
+/// Floating bottom bar. The selected item grows into a pill that shows its label.
+class FloatNav extends StatelessWidget {
+  final int index;
+  final List<(String, IconData)> items;
+  final ValueChanged<int> onTap;
+  const FloatNav({super.key, required this.index, required this.items, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final avail = MediaQuery.of(context).size.width - 24 - 12;
+    final selW = (avail * 0.34).clamp(96.0, 150.0);
+    final otherW = (avail - selW) / (items.length - 1);
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(color: ink, borderRadius: BorderRadius.circular(24), boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 20, offset: Offset(0, 8))]),
+        child: Row(children: [
+          for (var i = 0; i < items.length; i++)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onTap(i),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeOutCubic,
+                width: i == index ? selW : otherW,
+                height: 48,
+                decoration: BoxDecoration(color: i == index ? flame : Colors.transparent, borderRadius: BorderRadius.circular(18)),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  AnimatedScale(scale: i == index ? 1.08 : 1, duration: const Duration(milliseconds: 320), curve: Curves.easeOutBack, child: Icon(items[i].$2, size: 22, color: i == index ? Colors.white : Colors.white60)),
+                  if (i == index) ...[
+                    const SizedBox(width: 6),
+                    Flexible(child: Text(items[i].$1, maxLines: 1, overflow: TextOverflow.clip, softWrap: false, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12.5))),
+                  ],
+                ]),
+              ),
+            ),
+        ]),
       ),
     );
   }

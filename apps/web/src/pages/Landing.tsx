@@ -8,6 +8,7 @@ import { Logo } from '../components/ui'
 import Carousel from '../components/Carousel'
 import ChatWidget from '../components/ChatWidget'
 import { CountUp, Tilt, Magnetic, SplitWords, ScrollProgress, useScrolled, CursorGlow, Parallax, Squiggle } from '../components/fx'
+import { CourtArt, CourtKind } from '../components/court'
 import { API, useApi, useAuth } from '../lib'
 import { SITE, fullAddress, mapsUrl } from '../site'
 
@@ -103,6 +104,77 @@ function TrialForm({ compact, sportList }: { compact?: boolean; sportList: { id:
   )
 }
 
+
+const courtOf: CourtKind[] = ['fencing', 'table', 'carrom', 'chess', 'fitness']
+
+/** Hero backdrop: the playing surface of each sport draws itself in turn. */
+function HeroCourt() {
+  const [i, setI] = useState(0)
+  useEffect(() => { const t = setInterval(() => setI((x) => (x + 1) % courtOf.length), 5200); return () => clearInterval(t) }, [])
+  return (
+    <div className="pointer-events-none absolute -left-[4%] top-[6%] hidden w-[58%] opacity-[.13] lg:block" aria-hidden>
+      <CourtArt kind={courtOf[i]} />
+    </div>
+  )
+}
+
+/** Desktop: the section pins to the screen and scrolling walks through the five sports, each with its own court. */
+function PinnedSports({ photos }: { photos: any[] }) {
+  const ref = useRef<HTMLElement>(null)
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    const on = () => {
+      const el = ref.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      const p = Math.min(0.999, Math.max(0, -r.top / Math.max(1, r.height - window.innerHeight)))
+      setI(Math.floor(p * sports.length))
+    }
+    on()
+    window.addEventListener('scroll', on, { passive: true })
+    window.addEventListener('resize', on)
+    return () => { window.removeEventListener('scroll', on); window.removeEventListener('resize', on) }
+  }, [])
+  const cur = sports[i]
+  const ph = photos.filter((p) => p.sport === cur.name).slice(0, 6)
+  return (
+    <section id="sports" ref={ref} className="relative hidden bg-deep text-white lg:block" style={{ height: `${sports.length * 85 + 15}vh` }}>
+      <div className="sticky top-0 grid h-screen grid-cols-[1fr_1.1fr] items-center gap-10 overflow-hidden px-8 xl:px-16">
+        <div className="aurora" />
+        <div className="relative z-10 max-w-xl">
+          <h2 className="text-5xl font-extrabold leading-[1.02] xl:text-6xl">Five sports.<br />One academy.</h2>
+          <ul className="mt-10 space-y-1">
+            {sports.map((s, k) => (
+              <li key={s.name}>
+                <button onClick={() => { const el = ref.current; if (el) window.scrollTo({ top: el.offsetTop + (el.offsetHeight - window.innerHeight) * ((k + 0.5) / sports.length), behavior: 'smooth' }) }}
+                  className={`flex w-full items-center gap-4 py-1.5 text-left font-display font-extrabold transition-all duration-500 ${k === i ? 'text-4xl text-white xl:text-5xl' : 'text-2xl text-white/30 hover:text-white/60'}`}>
+                  <span className={`h-1 rounded-full bg-gold transition-all duration-500 ${k === i ? 'w-10' : 'w-0'}`} />{s.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div key={cur.name} className="rise mt-6 min-h-[8.5rem]">
+            <span className="rounded-full border border-white/25 px-3 py-1 text-xs font-semibold text-white/80">{cur.tag}</span>
+            <p className="mt-3 max-w-md text-lg leading-relaxed text-white/75">{cur.text}</p>
+            <a href="#trial" className="mt-4 inline-flex items-center gap-2 font-bold text-gold hover:gap-3">Try a {cur.name} class <ArrowRight size={18} /></a>
+          </div>
+        </div>
+        <div className="relative z-10 mx-auto w-full max-w-2xl">
+          <CourtArt kind={courtOf[i]} className="w-full" />
+          {ph.length > 0 && (
+            <div key={cur.name} className="rise absolute -bottom-6 -right-2 h-44 w-64 overflow-hidden rounded-2xl border border-white/20 shadow-2xl shadow-black/50 xl:h-52 xl:w-72">
+              <Carousel className="absolute inset-0" interval={3200} slides={ph.map((p) => ({ id: p.id, src: src(p.key) }))} />
+            </div>
+          )}
+        </div>
+        <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-2" aria-hidden>
+          {sports.map((_, k) => <span key={k} className={`h-1.5 rounded-full transition-all duration-500 ${k === i ? 'w-8 bg-gold' : 'w-1.5 bg-white/30'}`} />)}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 const APK_URL = 'https://github.com/pughal-prog/gsa/releases/latest/download/GlobalSportsAcademy.apk'
 
 export default function Landing() {
@@ -161,10 +233,11 @@ export default function Landing() {
       </header>
 
       {/* hero */}
-      <Parallax className="contents"><section className="grain relative overflow-hidden bg-navy text-white">
+      <Parallax className="contents"><section className="grain relative overflow-hidden bg-deep text-white">
         {slides.length > 0 && <div data-speed="0.12" className="absolute inset-0"><Carousel slides={slides} interval={5200} className="absolute inset-0 opacity-30" /></div>}
-        <div className="absolute inset-0 bg-gradient-to-br from-navy via-navy/90 to-navy2/70" />
+        <div className="absolute inset-0 bg-gradient-to-br from-deep via-deep/90 to-navy/70" />
         <div data-speed="0.2" className="absolute inset-0"><div className="aurora" /></div>
+        <HeroCourt />
         <div className="orb a" /><div className="orb b" /><div className="orb c" />
         <div className="hero-grid absolute inset-0" />
         <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-4 pb-28 pt-14 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:pb-32 lg:pt-20">
@@ -204,7 +277,8 @@ export default function Landing() {
       </div>
 
       {/* sports */}
-      <section id="sports" className="mx-auto max-w-7xl px-4 py-24 sm:px-8">
+      <PinnedSports photos={photos} />
+      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-8 lg:hidden">
         <Reveal className="mx-auto max-w-2xl text-center">
           <Eyebrow>What we teach</Eyebrow>
           <h2 className="mt-3 text-3xl font-extrabold sm:text-5xl">Five disciplines, one standard</h2>
@@ -298,12 +372,32 @@ export default function Landing() {
             <p className="mt-3 text-xs text-mute">After downloading, open the file and allow "Install from this source" if Android asks. Works on Android 6 and above.</p>
           </Reveal>
           <div className="grid gap-4 sm:grid-cols-2">
-            {features.map((f, i) => (
-              <Reveal key={f.t} delay={i * 50}>
-                <div className="h-full rounded-2xl border border-line bg-white p-6 transition hover:border-brand/40 hover:shadow-lg hover:shadow-navy/5">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand/10 text-brand"><f.icon size={22} /></span>
-                  <h3 className="mt-4 text-lg font-bold">{f.t}</h3><p className="mt-1.5 text-sm leading-relaxed text-mute">{f.d}</p>
+            <Reveal className="sm:col-span-2">
+              <Tilt className="rounded-2xl">
+                <div className="relative overflow-hidden rounded-2xl bg-deep p-7 text-white">
+                  <div className="aurora" />
+                  <div className="relative">
+                    <h3 className="text-2xl font-extrabold">Know the moment they arrive</h3>
+                    <p className="mt-2 max-w-md text-sm text-white/70">Parents get an alert when a child checks in, and a flag when they are late or absent.</p>
+                    <div className="mt-6 max-w-sm space-y-2.5" aria-label="Sample alerts">
+                      {[['Checked in', 'Sample student arrived at 5:02 pm', 'bg-leaf'], ['Running late', 'Not yet checked in for the 5:00 batch', 'bg-gold']].map(([t, d, c], i) => (
+                        <div key={t} className="rise flex items-center gap-3 rounded-xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur" style={{ animationDelay: `${400 + i * 500}ms` }}>
+                          <span className={`h-2.5 w-2.5 rounded-full ${c}`} /><div><div className="text-sm font-bold">{t}</div><div className="text-xs text-white/65">{d}</div></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
+              </Tilt>
+            </Reveal>
+            {features.filter((_, k) => k !== 1).map((f, i) => (
+              <Reveal key={f.t} delay={i * 50} className={i === 4 ? 'sm:col-span-2' : ''}>
+                <Tilt className="h-full rounded-2xl">
+                  <div className="h-full rounded-2xl border border-line bg-white p-6">
+                    <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand/10 text-brand"><f.icon size={22} /></span>
+                    <h3 className="mt-4 text-lg font-bold">{f.t}</h3><p className="mt-1.5 text-sm leading-relaxed text-mute">{f.d}</p>
+                  </div>
+                </Tilt>
               </Reveal>
             ))}
           </div>
@@ -311,9 +405,9 @@ export default function Landing() {
       </section>
 
       {/* sport marquee */}
-      <div className="overflow-hidden bg-navy py-4 text-white" aria-hidden>
-        <div className="marquee flex w-max gap-10 whitespace-nowrap font-display text-lg font-bold">
-          {[...sports, ...sports, ...sports, ...sports].map((s, i) => <span key={i} className="flex items-center gap-10">{s.name}<span className="text-sky">◆</span></span>)}
+      <div className="overflow-hidden bg-deep py-8" aria-hidden>
+        <div className="marquee flex w-max gap-12 whitespace-nowrap font-display text-6xl font-extrabold sm:text-8xl">
+          {[...sports, ...sports, ...sports].map((s, i) => <span key={i} className="flex items-center gap-12"><span className="outline-word">{s.name}</span><span className="text-flame">/</span></span>)}
         </div>
       </div>
 

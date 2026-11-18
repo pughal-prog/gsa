@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'api.dart';
 import 'notify.dart';
 import 'home.dart';
@@ -44,13 +45,13 @@ class _GsaAppState extends State<GsaApp> {
         pageTransitionsTheme: const PageTransitionsTheme(builders: {TargetPlatform.android: SlideFadeTransitions(), TargetPlatform.iOS: SlideFadeTransitions()}),
         colorScheme: ColorScheme.fromSeed(seedColor: flame, primary: ink, secondary: flame, surface: Colors.white),
         scaffoldBackgroundColor: paper,
-        appBarTheme: const AppBarTheme(backgroundColor: ink, foregroundColor: Colors.white, elevation: 0, scrolledUnderElevation: 0, titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+        appBarTheme: const AppBarTheme(backgroundColor: paper, foregroundColor: ink, surfaceTintColor: Colors.transparent, elevation: 0, scrolledUnderElevation: 0, centerTitle: false, systemOverlayStyle: SystemUiOverlayStyle.dark, titleTextStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: ink, letterSpacing: -.3)),
         navigationBarTheme: NavigationBarThemeData(backgroundColor: ink, indicatorColor: flame, iconTheme: WidgetStateProperty.resolveWith((st) => IconThemeData(color: st.contains(WidgetState.selected) ? Colors.white : Colors.white60)), labelTextStyle: WidgetStateProperty.resolveWith((st) => TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: st.contains(WidgetState.selected) ? Colors.white : Colors.white60))),
-        cardTheme: CardTheme(color: Colors.white, elevation: 0, margin: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6), side: const BorderSide(color: Color(0xFFE2DED4)))),
-        inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: const BorderSide(color: Color(0xFFD8D3C7)))),
-        filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: ink, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)))),
+        cardTheme: CardTheme(color: Colors.white, elevation: 0, margin: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: Color(0xFFE6E2D8)))),
+        inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFD8D3C7))), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF00A0E0), width: 2))),
+        filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: ink, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(52), textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)))),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: flame, foregroundColor: Colors.white),
-        chipTheme: ChipThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
+        chipTheme: ChipThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
       ),
       home: signedIn ? Home(onSignOut: () => _set(false)) : Welcome(onSignedIn: () => _set(true)),
     );

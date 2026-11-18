@@ -4,7 +4,7 @@ import { API, getToken, cx } from '../lib'
 import { CountUp } from './fx'
 
 export const Card = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <div className={cx('rounded-lg border border-line bg-surface p-5', className)}>{children}</div>
+  <div className={cx('rounded-xl border border-line bg-surface p-5 transition-shadow hover:shadow-[0_14px_34px_-24px_rgba(6,43,87,.45)]', className)}>{children}</div>
 )
 
 export const PageHeader = ({ title, sub, action }: { title: string; sub?: string; action?: ReactNode }) => (

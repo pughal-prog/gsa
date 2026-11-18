@@ -17,11 +17,28 @@ class OverviewPage extends StatelessWidget {
         fetch: () => Api.get('/api/reports/overview'),
         builder: (c, d, reload) {
           final k = d['counts'], m = d['thisMonth'], a = d['attendance'] ?? {};
-          var n = 0;
+          num nv(dynamic x) => x is num ? x : num.tryParse('$x') ?? 0;
+          var n = 1;
           Widget tile(String t, num v, IconData i, Color col, {bool money = false}) => Expanded(child: Reveal(index: n++, child: Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Icon(i, color: col), const SizedBox(height: 8), CountUp(v, format: money ? inr : (x) => x.round().toString(), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)), Text(t, style: const TextStyle(color: Colors.black54, fontSize: 12))])))));
-          num nv(dynamic x) => x is num ? x : num.tryParse('$x') ?? 0;
           return RefreshIndicator(onRefresh: () async => reload(), child: ListView(padding: const EdgeInsets.all(16), children: [
+            Reveal(child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF04152B), Color(0xFF0A3D7A)])),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Income this month', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                const SizedBox(height: 6),
+                CountUp(nv(m['income']), format: inr, style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -.5)),
+                const SizedBox(height: 14),
+                Row(children: [
+                  Expanded(child: Text('Expenses ${inr(nv(m['expense']))}', style: const TextStyle(color: Colors.white70, fontSize: 13))),
+                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFFF5B82E), shape: BoxShape.circle)),
+                  const SizedBox(width: 6),
+                  Text('${nv(k['students']).round()} active students', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                ]),
+              ]),
+            )),
+            const SizedBox(height: 12),
             Row(children: [tile('Active students', nv(k['students']), Icons.groups, brand), const SizedBox(width: 12), tile('Staff', nv(k['staff']), Icons.sports, leaf)]),
             const SizedBox(height: 12),
             Row(children: [tile('Income this month', nv(m['income']), Icons.trending_up, leaf, money: true), const SizedBox(width: 12), tile('Expenses', nv(m['expense']), Icons.trending_down, flame, money: true)]),
