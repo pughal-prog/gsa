@@ -93,10 +93,11 @@ export default function Login({ initial = 'signin' }: { initial?: Tab }) {
         <p className="text-sm text-white/70">{SITE.phone} · {SITE.domain}</p>
       </aside>
 
-      <main className="flex items-center justify-center bg-page p-4 sm:p-10">
-        <div className="w-full max-w-md rise">
+      <main className="hero-light relative flex items-center justify-center overflow-hidden p-4 sm:p-10">
+        <div className="blob b1" /><div className="blob b3" />
+        <div className="relative z-10 w-full max-w-md rise">
           <Link to="/" className="mb-6 flex justify-center lg:hidden"><Logo small className="!h-24" /></Link>
-          <div className="rounded-lg border border-line bg-surface p-6 shadow-card sm:p-8">
+          <div className="glass-card rounded-2xl p-6 sm:p-8">
             {done ? (
               <div className="py-6 text-center">
                 <CheckCircle2 className="mx-auto text-leaf" size={52} />
@@ -114,7 +115,7 @@ export default function Login({ initial = 'signin' }: { initial?: Tab }) {
                 </div>
 
                 {tab === 'signin' ? (
-                  <form onSubmit={signin} className="space-y-4">
+                  <form key="in" onSubmit={signin} className="pop-in space-y-4">
                     <div><h1 className="text-2xl font-extrabold">Welcome back</h1><p className="mt-1 text-sm text-mute">Use the ID issued by the academy, or your email.</p></div>
                     <label className="block"><span className={lab}>User ID or email</span><input name="username" autoComplete="username" required className={inputCls} placeholder="GSA-S-0001 or you@email.com" /></label>
                     <label className="block"><span className={lab}>Password</span><input name="password" type="password" autoComplete="current-password" required className={inputCls} /></label>
@@ -122,7 +123,7 @@ export default function Login({ initial = 'signin' }: { initial?: Tab }) {
                     <Btn type="submit" className="w-full py-3" disabled={busy}>{busy ? 'Signing in...' : 'Sign in'}</Btn>
                   </form>
                 ) : (
-                  <form ref={formRef} onSubmit={signup} className="space-y-3">
+                  <form key="up" ref={formRef} onSubmit={signup} className="pop-in space-y-3">
                     <div><h1 className="text-2xl font-extrabold">Create your account</h1><p className="mt-1 text-sm text-mute">The academy approves new accounts before first sign-in.</p></div>
                     <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="I am a">
                       {([['student', 'Student / Parent'], ['staff', 'Coach / Staff']] as const).map(([v, l]) => (

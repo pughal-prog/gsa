@@ -173,3 +173,16 @@ input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px
 @media (prefers-reduced-motion: reduce) { .blob, .grad-text { animation: none; } }
 .word.grad-text { animation: word-up .75s cubic-bezier(.2,.8,.2,1) forwards, gshift 6s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .word.grad-text { animation: none; transform: none; } }
+
+/* ---------- glass, ripple, shake ---------- */
+.glass-card { background: rgba(255,255,255,.72); backdrop-filter: blur(18px) saturate(1.5); border: 1px solid rgba(255,255,255,.8); box-shadow: 0 30px 60px -30px rgba(6,43,87,.45), inset 0 1px 0 rgba(255,255,255,.9); }
+.rip { position: relative; overflow: hidden; }
+.ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.55); transform: scale(0); animation: ripple .6s ease-out forwards; pointer-events: none; }
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+.shake { animation: shake .4s ease; }
+@keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+
+.typing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-mute); animation: typing 1s ease-in-out infinite; }
+@keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: .4; } 30% { transform: translateY(-5px); opacity: 1; } }
+.toast-in { animation: toast-in .35s cubic-bezier(.2,.9,.3,1.2) both; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }

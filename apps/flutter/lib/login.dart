@@ -143,14 +143,14 @@ class _SignInState extends State<SignIn> {
     return Scaffold(
       appBar: AppBar(title: const Text('Sign in')),
       body: ListView(padding: const EdgeInsets.all(24), children: [
-        const Text('Welcome back', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
+        const Reveal(child: Text('Welcome back', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800))),
         const SizedBox(height: 4),
         const Text('Use the ID given by the academy, or the email you signed up with.', style: TextStyle(color: Colors.black54)),
         const SizedBox(height: 24),
-        TextField(controller: u, decoration: const InputDecoration(labelText: 'ID or email'), autocorrect: false, textInputAction: TextInputAction.next),
+        Reveal(index: 1, child: TextField(controller: u, decoration: const InputDecoration(labelText: 'ID or email'), autocorrect: false, textInputAction: TextInputAction.next)),
         const SizedBox(height: 12),
-        TextField(controller: p, obscureText: !show, onSubmitted: (_) => go(),
-            decoration: InputDecoration(labelText: 'Password', suffixIcon: IconButton(icon: Icon(show ? Icons.visibility_off : Icons.visibility), onPressed: () => setState(() => show = !show)))),
+        Reveal(index: 2, child: TextField(controller: p, obscureText: !show, onSubmitted: (_) => go(),
+            decoration: InputDecoration(labelText: 'Password', suffixIcon: IconButton(icon: Icon(show ? Icons.visibility_off : Icons.visibility), onPressed: () => setState(() => show = !show))))),
         if (err.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 12), child: Text(err, style: const TextStyle(color: Colors.red))),
         const SizedBox(height: 20),
         FilledButton(onPressed: busy ? null : go, child: busy ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Sign in')),

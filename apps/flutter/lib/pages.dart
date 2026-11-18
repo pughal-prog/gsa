@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'motion.dart';
 import 'api.dart';
 import 'common.dart';
@@ -256,7 +257,21 @@ class _EnquiriesPageState extends State<EnquiriesPage> {
               itemBuilder: (c, i) {
                 final e = rows[i];
                 final st = '${e['status']}';
-                return Card(child: ListTile(
+                Widget swipeBg(Color c, IconData i, String t, Alignment al) => Container(
+                    alignment: al, padding: const EdgeInsets.symmetric(horizontal: 22),
+                    decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(16)),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(i, color: Colors.white), const SizedBox(width: 8), Text(t, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700))]));
+                return Reveal(index: i, child: Dismissible(
+                  key: ValueKey('enq-${e['id']}-$st'),
+                  background: swipeBg(leaf, Icons.phone_in_talk, 'Contacted', Alignment.centerLeft),
+                  secondaryBackground: swipeBg(const Color(0xFF5D6B86), Icons.check, 'Close', Alignment.centerRight),
+                  confirmDismiss: (dir) async {
+                    final to = dir == DismissDirection.startToEnd ? 'contacted' : 'closed';
+                    HapticFeedback.mediumImpact();
+                    if (to != st && c.mounted && await attempt(c, () => Api.send('PATCH', '/api/site/enquiries/${e['id']}', {'status': to}), ok: 'Marked as $to')) setState(() => refresh++);
+                    return false;
+                  },
+                  child: Card(child: ListTile(
                   title: Row(children: [Expanded(child: Text('${e['name']}', style: const TextStyle(fontWeight: FontWeight.w700))), pill(st, st == 'new' ? flame : statusColor(st == 'joined' ? 'paid' : 'pending'))]),
                   subtitle: Padding(padding: const EdgeInsets.only(top: 4), child: SelectableText([ '${e['phone']}', if (e['sport'] != null) '${e['sport']}', if (e['child_age'] != null) 'age ${e['child_age']}', '${e['created_at']}'.substring(0, 10), if (e['message'] != null) '${e['message']}' ].join('  |  '))),
                   isThreeLine: e['message'] != null,
@@ -269,7 +284,7 @@ class _EnquiriesPageState extends State<EnquiriesPage> {
                     if (pick == null || pick == st || !c.mounted) return;
                     if (await attempt(c, () => Api.send('PATCH', '/api/site/enquiries/${e['id']}', {'status': pick}), ok: 'Updated')) setState(() => refresh++);
                   },
-                ));
+                ))));
               },
             ));
           },

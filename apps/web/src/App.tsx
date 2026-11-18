@@ -21,6 +21,7 @@ import Approvals from './pages/Approvals'
 import SiteContent from './pages/SiteContent'
 import Enquiries from './pages/Enquiries'
 import ChatWidget from './components/ChatWidget'
+import { Toaster } from './components/fx'
 import NotifBell from './components/Bell'
 
 type Item = { to: string; label: string; icon: any; show: (me: any) => boolean }
@@ -88,9 +89,7 @@ function Shell() {
             <div className="flex items-center gap-1"><NotifBell /><button onClick={() => setOpen(!open)} aria-label="Menu" aria-expanded={open} className="rounded-lg p-2 hover:bg-soft">{open ? <X /> : <Menu />}</button></div>
           </div>
         </header>
-        {open && (
-          <div className="fixed inset-x-0 top-[76px] z-30 max-h-[80vh] overflow-y-auto border-b border-line bg-surface p-4 shadow-xl lg:hidden">{nav}<div className="mt-3">{userBox}</div></div>
-        )}
+        <div className={`fixed inset-x-0 top-[76px] z-30 max-h-[80vh] overflow-y-auto border-b border-line bg-surface p-4 shadow-xl transition-all duration-300 ease-out lg:hidden ${open ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-3 opacity-0'}`} aria-hidden={!open}>{nav}<div className="mt-3">{userBox}</div></div>
         <main key={loc.pathname} className="page-in mx-auto max-w-7xl p-4 sm:p-8"><Outlet /></main>
       </div>
     </div>
@@ -109,6 +108,8 @@ const AppHome = () => {
 
 export default function App() {
   return (
+    <>
+    <Toaster />
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<><Login /><ChatWidget /></>} />
@@ -135,5 +136,6 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   )
 }

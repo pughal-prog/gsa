@@ -24,7 +24,7 @@ export default function Students() {
           {can(me, 'students.edit') && <Btn onClick={() => setAdding(true)}><Plus size={16} /> Add student</Btn>}</div>} />
       <Card>
         <div className="mb-4 flex flex-wrap gap-3">
-          <div className="relative min-w-60 flex-1">
+          <div className="relative min-w-60 flex-1 sm:w-64 sm:flex-none sm:transition-[width] sm:duration-300 sm:ease-out sm:focus-within:w-[28rem]">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-mute" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or admission no." aria-label="Search students"
               className="w-full rounded-md border border-line bg-soft py-2 pl-9 pr-3 text-sm outline-none focus:border-brand" />

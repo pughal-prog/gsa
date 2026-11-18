@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, FormEvent, ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, FormEvent, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight, MapPin, Phone, MessageCircle, ImageOff, X, ArrowUpRight, Swords, Dices, Crown, Dumbbell, CircleDot,
@@ -9,6 +9,7 @@ import Carousel from '../components/Carousel'
 import ChatWidget from '../components/ChatWidget'
 import { CountUp, Tilt, Magnetic, SplitWords, ScrollProgress, useScrolled, CursorGlow, Parallax, Squiggle } from '../components/fx'
 import { CourtArt, CourtKind } from '../components/court'
+const Hero3D = lazy(() => import('../components/Hero3D'))
 import { API, useApi, useAuth } from '../lib'
 import { SITE, fullAddress, mapsUrl } from '../site'
 
@@ -63,7 +64,7 @@ const Eyebrow = ({ children, light }: { children: ReactNode; light?: boolean }) 
   <div className={`label inline-flex items-center gap-2 ${light ? 'text-sky' : 'text-flame'}`}><span className={`h-0.5 w-6 ${light ? 'bg-sky' : 'bg-flame'}`} />{children}</div>
 )
 
-function TrialForm({ compact, sportList }: { compact?: boolean; sportList: { id: number; name: string }[] }) {
+function TrialForm({ compact, bar, sportList }: { compact?: boolean; bar?: boolean; sportList: { id: number; name: string }[] }) {
   const [f, setF] = useState({ name: '', phone: '', sport_id: '', child_age: '', message: '', website: '' })
   const [state, setState] = useState<'idle' | 'busy' | 'done'>('idle')
   const [err, setErr] = useState('')
@@ -86,9 +87,9 @@ function TrialForm({ compact, sportList }: { compact?: boolean; sportList: { id:
   )
   const inp = 'w-full rounded-lg border border-line bg-white px-3.5 py-3 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-sky/30'
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <form onSubmit={submit} className={bar ? 'grid gap-3 lg:grid-cols-[1.2fr_1.2fr_1fr_.7fr_auto] lg:items-center' : 'space-y-3'}>
       <input className="hidden" tabIndex={-1} autoComplete="off" value={f.website} onChange={(e) => set('website', e.target.value)} aria-hidden />
-      <div className={compact ? 'grid gap-3' : 'grid gap-3 sm:grid-cols-2'}>
+      <div className={bar ? 'contents' : compact ? 'grid gap-3' : 'grid gap-3 sm:grid-cols-2'}>
         <label className="block"><span className="sr-only">Your name</span><input required className={inp} placeholder="Your name" value={f.name} onChange={(e) => set('name', e.target.value)} /></label>
         <label className="block"><span className="sr-only">Phone number</span><input required inputMode="tel" className={inp} placeholder="Phone number" value={f.phone} onChange={(e) => set('phone', e.target.value)} /></label>
         <label className="block"><span className="sr-only">Sport</span>
@@ -96,8 +97,8 @@ function TrialForm({ compact, sportList }: { compact?: boolean; sportList: { id:
         <label className="block"><span className="sr-only">Child age</span><input className={inp} placeholder="Child’s age" value={f.child_age} onChange={(e) => set('child_age', e.target.value)} /></label>
       </div>
       {!compact && <textarea className={inp} rows={3} placeholder="Anything we should know? (optional)" value={f.message} onChange={(e) => set('message', e.target.value)} />}
-      {err && <p className="text-sm font-medium text-danger" role="alert">{err}</p>}
-      <button disabled={state === 'busy'} className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-flame px-5 py-3.5 font-bold text-white transition hover:brightness-110 disabled:opacity-60">
+      {err && <p key={err} className="shake text-sm font-medium text-danger lg:col-span-full" role="alert">{err}</p>}
+      <button disabled={state === 'busy'} className={`rip inline-flex items-center justify-center gap-2 rounded-lg bg-flame px-5 py-3.5 font-bold text-white transition hover:brightness-110 disabled:opacity-60 ${bar ? "" : "w-full"}`}>
         {state === 'busy' ? 'Sending...' : 'Request a trial class'} <ArrowRight size={18} />
       </button>
     </form>
@@ -237,33 +238,38 @@ export default function Landing() {
         <div data-speed="0.1" className="absolute inset-0" aria-hidden>
           <div className="blob b1" /><div className="blob b2" /><div className="blob b3" /><div className="blob b4" />
         </div>
-        <HeroCourt />
-        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-4 pb-28 pt-14 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:pb-32 lg:pt-20">
+        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-4 px-4 pb-44 pt-12 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:pb-48 lg:pt-16">
           <div>
             <Eyebrow>Indoor sports academy · Namakkal</Eyebrow>
-            <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] sm:text-6xl" aria-label="Where young athletes train, compete and win."><SplitWords parts={["Where young athletes", { text: "train,", className: "grad-text" }, "compete and", { text: "win.", className: "grad-text" }]} /></h1>
+            <h1 className="mt-5 text-5xl font-extrabold leading-[1.02] sm:text-7xl" aria-label="Where young athletes train, compete and win."><SplitWords parts={["Where young athletes", { text: "train,", className: "grad-text" }, "compete and", { text: "win.", className: "grad-text" }]} /></h1>
             <p className="mt-6 max-w-xl text-lg text-ink/70">Five sports under one roof, certified coaching for every age category, and an app that keeps coaches, parents and students on the same page.</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Magnetic><a href="#trial" className="inline-flex items-center gap-2 rounded-lg bg-flame px-6 py-3.5 font-bold text-white shadow-lg shadow-flame/30 transition hover:brightness-110">Book a trial class <ArrowRight size={18} /></a></Magnetic>
-              <a href={`tel:+${SITE.phoneIntl}`} className="inline-flex items-center gap-2 rounded-lg border border-ink/20 bg-white/60 px-6 py-3.5 font-semibold backdrop-blur transition hover:bg-white"><Phone size={18} /> {SITE.phone}</a>
+              <Magnetic><a href="#trial" className="rip inline-flex items-center gap-2 rounded-lg bg-flame px-6 py-3.5 font-bold text-white shadow-lg shadow-flame/30 transition hover:brightness-110">Book a trial class <ArrowRight size={18} /></a></Magnetic>
+              <Magnetic><a href={`tel:+${SITE.phoneIntl}`} className="rip inline-flex items-center gap-2 rounded-lg border border-ink/20 bg-white/60 px-6 py-3.5 font-semibold backdrop-blur transition hover:bg-white"><Phone size={18} /> {SITE.phone}</a></Magnetic>
             </div>
             <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink/70">
               {['Certified coaches', 'All age categories', 'Parent app with live alerts'].map((x) => <li key={x} className="flex items-center gap-2"><CheckCircle2 size={16} className="text-leaf" />{x}</li>)}
             </ul>
           </div>
-          {/* trial card */}
-          <div id="trial" className="gborder isolate rounded-2xl bg-white p-6 text-ink shadow-2xl shadow-ink/15 sm:p-7">
-            <div className="label text-flame">Free to ask, quick to answer</div>
-            <h2 className="mt-1 text-2xl font-extrabold">Book a trial class</h2>
-            <p className="mb-4 mt-1 text-sm text-mute">Leave your number and we will call you back.</p>
-            <TrialForm compact sportList={sportList} />
+          <div className="relative h-[340px] sm:h-[460px] lg:h-[540px]">
+            <Suspense fallback={null}><Hero3D className="absolute inset-0" /></Suspense>
+          </div>
+        </div>
+        {/* booking bar */}
+        <div id="trial" className="absolute inset-x-0 bottom-10 z-20 mx-auto max-w-6xl scroll-mt-24 px-4 sm:px-8">
+          <div className="glass-card rounded-2xl p-4 sm:p-5">
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xl font-extrabold">Book a trial class</h2>
+              <p className="text-sm text-mute">Leave your number and we will call you back to confirm a batch.</p>
+            </div>
+            <TrialForm bar compact sportList={sportList} />
           </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0 z-10 h-1.5 bg-gradient-to-r from-flame via-sky to-leaf" />
       </section></Parallax>
 
       {/* facts strip overlapping the hero */}
-      <div className="relative z-20 mx-auto -mt-10 max-w-6xl px-4 sm:px-8">
+      <div className="relative z-20 mx-auto mt-8 max-w-6xl px-4 sm:px-8">
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-line shadow-xl shadow-navy/10 md:grid-cols-4">
           {[[Trophy, 5, 'Sports taught'], [Users, 4, 'Age categories'], [Award, 3, 'Levels: District, Zonal, State'], [Smartphone, 'Web + App', 'For parents and coaches']].map(([I, n, l]: any) => (
             <div key={l} className="flex items-center gap-3 bg-white px-5 py-5">

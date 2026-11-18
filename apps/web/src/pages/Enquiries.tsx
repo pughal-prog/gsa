@@ -1,3 +1,4 @@
+import { toast } from '../components/fx'
 import { useState } from 'react'
 import { Phone, MessageCircle, Trash2, Star, Check, EyeOff } from 'lucide-react'
 import { api, useApi } from '../lib'
@@ -24,7 +25,7 @@ function Requests() {
   if (error) return <ErrorMsg text={error} />
   const rows: any[] = (data?.enquiries ?? []).filter((e: any) => filter === 'all' || e.status === filter)
   const newCount = (data?.enquiries ?? []).filter((e: any) => e.status === 'new').length
-  const set = async (id: number, status: string) => { await api(`/api/site/enquiries/${id}`, { method: 'PATCH', body: { status } }); reload() }
+  const set = async (id: number, status: string) => { try { await api(`/api/site/enquiries/${id}`, { method: 'PATCH', body: { status } }); toast(`Marked as ${status}`); reload() } catch (e: any) { toast(e.message || 'Could not update', 'error') } }
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
@@ -64,7 +65,7 @@ function Reviews() {
   if (loading) return <Loading />
   if (error) return <ErrorMsg text={error} />
   const rows: any[] = data?.reviews ?? []
-  const set = async (id: number, status: string) => { await api(`/api/site/reviews/${id}`, { method: 'PATCH', body: { status } }); reload() }
+  const set = async (id: number, status: string) => { try { await api(`/api/site/reviews/${id}`, { method: 'PATCH', body: { status } }); toast(status === 'approved' ? 'Review approved' : `Review ${status}`); reload() } catch (e: any) { toast(e.message || 'Could not update', 'error') } }
   if (!rows.length) return <Card><Empty text="No reviews yet. Parents can post one from their account, and it waits here for your approval." /></Card>
   return (
     <div className="space-y-3">

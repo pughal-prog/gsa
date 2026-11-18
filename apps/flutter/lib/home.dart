@@ -65,7 +65,13 @@ class _HomeState extends State<Home> {
             ),
         ],
       ),
-      body: AnimatedSwitcher(duration: const Duration(milliseconds: 260), switchInCurve: Curves.easeOutCubic, transitionBuilder: (w, a) => FadeTransition(opacity: a, child: SlideTransition(position: Tween(begin: const Offset(0, 0.015), end: Offset.zero).animate(a), child: w)), child: KeyedSubtree(key: ValueKey(tab), child: pages[tab].$3)),
+      body: GestureDetector(
+        onHorizontalDragEnd: (d) {
+          final v = d.primaryVelocity ?? 0;
+          if (v < -450 && tab < pages.length - 1) { HapticFeedback.selectionClick(); setState(() => tab++); }
+          else if (v > 450 && tab > 0) { HapticFeedback.selectionClick(); setState(() => tab--); }
+        },
+        child: AnimatedSwitcher(duration: const Duration(milliseconds: 260), switchInCurve: Curves.easeOutCubic, transitionBuilder: (w, a) => FadeTransition(opacity: a, child: SlideTransition(position: Tween(begin: const Offset(0, 0.015), end: Offset.zero).animate(a), child: w)), child: KeyedSubtree(key: ValueKey(tab), child: pages[tab].$3))),
       bottomNavigationBar: FloatNav(
         index: tab,
         items: [for (final p in pages) (p.$1, p.$2)],

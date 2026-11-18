@@ -50,7 +50,7 @@ export const Badge = ({ children, tone }: { children: ReactNode; tone?: string }
 
 export const Btn = ({ variant = 'primary', className, ...p }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'ghost' | 'danger' }) => (
   <button {...p} className={cx(
-    'inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky',
+    'rip inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky',
     variant === 'primary' && 'bg-ink text-white hover:bg-brand',
     variant === 'ghost' && 'border border-line bg-surface text-slate-700 hover:bg-soft',
     variant === 'danger' && 'bg-danger/10 text-danger hover:bg-danger/20', className)} />
@@ -64,7 +64,7 @@ export const Loading = () => (
     {[0, 1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-12" />)}
   </div>
 )
-export const ErrorMsg = ({ text }: { text: string }) => <div className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger" role="alert">{text}</div>
+export const ErrorMsg = ({ text }: { text: string }) => <div key={text} className="shake rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger" role="alert">{text}</div>
 
 export type Col<T> = { head: string; cell: (r: T) => ReactNode; className?: string }
 export function Table<T>({ cols, rows, onRow, empty = 'Nothing here yet' }: { cols: Col<T>[]; rows: T[]; onRow?: (r: T) => void; empty?: string }) {

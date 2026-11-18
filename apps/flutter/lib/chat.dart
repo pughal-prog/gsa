@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'api.dart';
 import 'common.dart';
 import 'main.dart';
 
 class _Msg {
   final bool me;
-  final String text;
-  final List<String> items;
+  String text;
+  List<String> items;
   _Msg(this.me, this.text, [this.items = const []]);
 }
 
@@ -43,7 +44,20 @@ class _AssistantPageState extends State<AssistantPage> {
       final items = [for (final i in L(d['items'])) '$i'];
       final next = [for (final c in L(d['chips'])) '$c'];
       if (!mounted) return;
-      setState(() { msgs.add(_Msg(false, '${d['reply'] ?? ''}', items)); chips = next.isEmpty ? startChips : next; });
+      // type the answer out word by word, then show the detail lines
+      final full = '${d['reply'] ?? ''}';
+      final reply = _Msg(false, '');
+      setState(() { busy = false; msgs.add(reply); });
+      final words = full.split(' ');
+      for (var w = 0; w < words.length; w++) {
+        if (!mounted) return;
+        setState(() => reply.text = words.sublist(0, w + 1).join(' '));
+        _toEnd();
+        await Future.delayed(const Duration(milliseconds: 28));
+      }
+      HapticFeedback.lightImpact();
+      if (!mounted) return;
+      setState(() { reply.items = items; chips = next.isEmpty ? startChips : next; });
     } catch (e) {
       if (!mounted) return;
       setState(() { msgs.add(_Msg(false, 'Sorry, I could not get that. $e')); chips = startChips; });
@@ -79,7 +93,7 @@ class _AssistantPageState extends State<AssistantPage> {
         Expanded(
           child: ListView(controller: scroll, padding: const EdgeInsets.fromLTRB(16, 14, 16, 8), children: [
             for (final m in msgs) _bubble(m),
-            if (busy) _bubble(_Msg(false, 'Looking that up...')),
+            if (busy) const Align(alignment: Alignment.centerLeft, child: _TypingDots()),
             if (!busy && chips.isNotEmpty) Wrap(spacing: 8, runSpacing: 8, children: [for (final c in chips) ActionChip(label: Text(c), onPressed: () => send(c), backgroundColor: Colors.white, side: const BorderSide(color: Color(0xFFD8D3C7)))]),
           ]),
         ),
@@ -96,4 +110,36 @@ class _AssistantPageState extends State<AssistantPage> {
           ),
         ),
       ]);
+}
+
+/// Three bouncing dots shown while the assistant is working.
+class _TypingDots extends StatefulWidget {
+  const _TypingDots();
+  @override
+  State<_TypingDots> createState() => _TypingDotsState();
+}
+
+class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderStateMixin {
+  late final AnimationController c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000))..repeat();
+  @override
+  void dispose() { c.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE2DED4))),
+        child: AnimatedBuilder(
+          animation: c,
+          builder: (context, _) {
+            double wave(int i) { final t = (c.value + i * 0.2) % 1.0; return t < .5 ? t * 2 : 2 - t * 2; }
+            return Row(mainAxisSize: MainAxisSize.min, children: [
+              for (var i = 0; i < 3; i++)
+                Transform.translate(
+                  offset: Offset(0, -5 * wave(i)),
+                  child: Container(margin: const EdgeInsets.symmetric(horizontal: 2.5), width: 7, height: 7, decoration: BoxDecoration(color: Colors.black.withOpacity(0.25 + 0.5 * wave(i)), shape: BoxShape.circle)),
+                ),
+            ]);
+          },
+        ),
+      );
 }

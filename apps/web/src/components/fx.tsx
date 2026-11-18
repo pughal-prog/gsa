@@ -156,3 +156,45 @@ export function Squiggle({ className = '' }: { className?: string }) {
     </svg>
   )
 }
+
+/** Adds a ripple to any element with the `rip` class. Call once at startup. */
+export function initRipple() {
+  if (typeof document === 'undefined') return
+  document.addEventListener('pointerdown', (e) => {
+    const el = (e.target as HTMLElement | null)?.closest<HTMLElement>('.rip')
+    if (!el || reduced() || (el as HTMLButtonElement).disabled) return
+    const r = el.getBoundingClientRect()
+    const size = Math.max(r.width, r.height)
+    const d = document.createElement('span')
+    d.className = 'ripple'
+    d.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - r.left - size / 2}px;top:${e.clientY - r.top - size / 2}px`
+    el.appendChild(d)
+    setTimeout(() => d.remove(), 650)
+  }, { passive: true })
+}
+
+type ToastItem = { id: number; text: string; tone: 'ok' | 'error' }
+let toastFn: ((text: string, tone?: 'ok' | 'error') => void) | null = null
+/** Shows a short message at the bottom of the screen. Safe to call from anywhere once <Toaster /> is mounted. */
+export const toast = (text: string, tone: 'ok' | 'error' = 'ok') => toastFn?.(text, tone)
+
+export function Toaster() {
+  const [items, setItems] = useState<ToastItem[]>([])
+  useEffect(() => {
+    toastFn = (text, tone = 'ok') => {
+      const id = Date.now() + Math.random()
+      setItems((x) => [...x.slice(-2), { id, text, tone }])
+      setTimeout(() => setItems((x) => x.filter((t) => t.id !== id)), 3200)
+    }
+    return () => { toastFn = null }
+  }, [])
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[70] flex flex-col items-center gap-2 px-4" role="status" aria-live="polite">
+      {items.map((t) => (
+        <div key={t.id} className={`toast-in rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-2xl ${t.tone === 'ok' ? 'bg-ink' : 'bg-danger'}`}>
+          <span className={`mr-2 inline-block h-2 w-2 rounded-full ${t.tone === 'ok' ? 'bg-leaf' : 'bg-white'}`} />{t.text}
+        </div>
+      ))}
+    </div>
+  )
+}
