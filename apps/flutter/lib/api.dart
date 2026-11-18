@@ -40,6 +40,7 @@ class Api {
     return data;
   }
 
+  static Future<dynamic> send(String m, String p, [Object? b]) => _send(m, p, b);
   static Future<dynamic> get(String p) => _send('GET', p);
   static Future<dynamic> post(String p, [Object? b]) => _send('POST', p, b ?? {});
   static Future<dynamic> put(String p, Object b) => _send('PUT', p, b);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Megaphone, FileDown } from 'lucide-react'
-import { exportPdf } from '../pdf'
+import { Megaphone, Trash2 } from 'lucide-react'
+import { ExportButtons } from '../components/Export'
 import { api, useApi, useAuth, fdate } from '../lib'
 import { Card, PageHeader, Table, Btn, Loading, ErrorMsg, Badge, FormModal, Empty } from '../components/ui'
 
@@ -16,14 +16,15 @@ export default function Notifications() {
   return (
     <>
       <PageHeader title="Notifications" sub={me?.role === 'student' ? 'Alerts sent to your parent / guardian' : 'Everything sent to parents: check-ins, late, absence, fees'}
-        action={<div className="flex gap-2"><Btn variant="ghost" onClick={() => exportPdf({ title: 'Notifications', head: ['When', 'Student', 'Message'], rows: rows.map((n) => [fdate(n.created_at), n.student || 'All', `${n.title}: ${n.body}`]), filename: 'notifications.pdf' })}><FileDown size={16} /> PDF</Btn>{me?.role === 'owner' && <Btn onClick={() => setOpen(true)}><Megaphone size={16} /> Announce</Btn>}</div>} />
+        action={<div className="flex gap-2"><ExportButtons title={'Notifications'} head={['When', 'Student', 'Message']} rows={rows.map((n) => [fdate(n.created_at), n.student || 'All', `${n.title}: ${n.body}`])} filename={'notifications.pdf'} />{me?.role === 'owner' && <Btn onClick={() => setOpen(true)}><Megaphone size={16} /> Announce</Btn>}</div>} />
       {sent && <div className="mb-4 rounded-md bg-brand/10 p-3 text-sm text-brand">{sent}</div>}
       <Card>
         {me?.role === 'student' ? (
           rows.length ? rows.map((n) => <div key={n.id} className="border-b border-line/60 py-3 last:border-0"><div className="flex justify-between"><b className="text-sm">{n.title}</b><span className="text-xs text-mute">{fdate(n.created_at)}</span></div><div className="text-sm text-slate-600">{n.body}</div></div>) : <Empty text="No notifications yet" />
         ) : (
-          <Table rows={rows} cols={[{ head: 'When', cell: (n: any) => fdate(n.created_at) }, { head: 'Student', cell: (n: any) => n.student || 'All' }, { head: 'Type', cell: (n: any) => <Badge tone="stored">{n.type}</Badge> },
-            { head: 'Message', cell: (n: any) => <div><b>{n.title}</b><div className="text-xs text-mute">{n.body}</div></div> }, { head: 'Delivery', cell: (n: any) => <Badge>{n.status}</Badge> }]} />
+          <Table rows={rows} cols={[{ head: 'When', cell: (n: any) => fdate(n.created_at) }, { head: 'Student', cell: (n: any) => n.student || (n.recipients > 1 ? `All parents (${n.recipients})` : 'All') }, { head: 'Type', cell: (n: any) => <Badge tone="stored">{n.type}</Badge> },
+            { head: 'Message', cell: (n: any) => <div><b>{n.title}</b><div className="text-xs text-mute">{n.body}</div></div> }, { head: 'Delivery', cell: (n: any) => <Badge>{n.status}</Badge> },
+            ...(me?.role === 'owner' ? [{ head: '', cell: (n: any) => <button aria-label="Delete notification" title="Delete" onClick={async () => { if (confirm(n.batch ? `Delete this announcement for all ${n.recipients} recipients?` : 'Delete this notification?')) { await api(`/api/notifications/${n.batch ?? n.id}`, { method: 'DELETE' }); reload() } }} className="rounded-md p-2 text-danger hover:bg-danger/10"><Trash2 size={16} /></button> }] : [])]} />
         )}
       </Card>
       {me?.role === 'owner' && <p className="mt-3 text-xs text-mute">Delivery "stored" means the message is saved but WhatsApp is not connected yet. Add the WhatsApp credentials to start real delivery.</p>}

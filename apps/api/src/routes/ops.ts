@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { App, all, one, run, can, needPerm, ownerOnly, canSeeStudent, timingSafeEqual, istNow, num, str, putFile, getFile, maxUpload } from '../lib'
+import { App, all, one, run, can, needPerm, ownerOnly, canSeeStudent, audit, timingSafeEqual, istNow, num, str, putFile, getFile, maxUpload } from '../lib'
 import { recordArrival, notifyParent } from '../notify'
 import { studentProfile } from './people'
 
@@ -54,19 +54,24 @@ async function visibleNotifs(c: any, limit: number) {
   if (a.role === 'student')
     return all<any>(c.env.DB, 'SELECT id, type, title, body, created_at FROM notifications WHERE student_id = ? ORDER BY id DESC LIMIT ?', a.refId, limit)
   if (a.role === 'staff' && !a.perms.includes('students.viewAll')) return []
-  return all<any>(c.env.DB, `SELECT n.*, s.name AS student FROM notifications n LEFT JOIN students s ON s.id = n.student_id ORDER BY n.id DESC LIMIT ?`, limit)
+  // owner: an announcement sent to many parents shows as one row
+  return all<any>(c.env.DB, `SELECT * FROM (
+      SELECT n.id, n.type, n.title, n.body, n.status, n.created_at, n.batch, 1 AS recipients, s.name AS student FROM notifications n LEFT JOIN students s ON s.id = n.student_id WHERE n.batch IS NULL
+      UNION ALL
+      SELECT MAX(id) AS id, 'announcement' AS type, title, body, MIN(status) AS status, MIN(created_at) AS created_at, batch, COUNT(*) AS recipients, NULL AS student FROM notifications WHERE batch IS NOT NULL GROUP BY batch
+    ) ORDER BY id DESC LIMIT ?`, limit)
 }
 ops.get('/notifications', async (c) => {
   const a = c.get('auth')
   const list = await visibleNotifs(c, 200)
   const seen = (await one<any>(c.env.DB, 'SELECT notif_seen_id AS n FROM users WHERE id = ?', a.uid))?.n ?? 0
-  return c.json({ notifications: list, unread: list.filter((n: any) => n.id > seen).length, seenId: seen })
+  return c.json({ notifications: list, unread: list.filter((n: any) => n.id > seen && !(a.role === 'owner' && n.type === 'announcement')).length, seenId: seen })
 })
 ops.get('/notifications/unread', async (c) => {
   const a = c.get('auth')
   const list = await visibleNotifs(c, 200)
   const seen = (await one<any>(c.env.DB, 'SELECT notif_seen_id AS n FROM users WHERE id = ?', a.uid))?.n ?? 0
-  const fresh = list.filter((n: any) => n.id > seen)
+  const fresh = list.filter((n: any) => n.id > seen && !(a.role === 'owner' && n.type === 'announcement'))
   return c.json({ unread: fresh.length, latest: fresh[0] ?? null })
 })
 ops.post('/notifications/seen', async (c) => {
@@ -87,8 +92,17 @@ ops.post('/notifications/broadcast', ownerOnly, async (c) => {
   const rows = Array.isArray(studentIds) && studentIds.length
     ? await all<any>(c.env.DB, `SELECT id, parent_phone FROM students WHERE id IN (${studentIds.map(() => '?').join(',')})`, ...studentIds)
     : await all<any>(c.env.DB, "SELECT id, parent_phone FROM students WHERE status = 'active'")
-  for (const s of rows) await notifyParent(c.env, s, 'announcement', title, body)
-  return c.json({ sent: rows.length })
+  const batch = crypto.randomUUID()
+  for (const s of rows) { const id = await notifyParent(c.env, s, 'announcement', title, body); if (id) await run(c.env.DB, 'UPDATE notifications SET batch = ? WHERE id = ?', batch, id) }
+  return c.json({ sent: rows.length, batch })
+})
+/** Owner only: delete one sent notification, or a whole announcement (batch). */
+ops.delete('/notifications/:id', ownerOnly, async (c) => {
+  const id = c.req.param('id')
+  if (id.includes('-')) await run(c.env.DB, 'DELETE FROM notifications WHERE batch = ?', id)
+  else await run(c.env.DB, 'DELETE FROM notifications WHERE id = ?', num(id))
+  await audit(c, 'notification.delete', { id })
+  return c.json({ ok: true })
 })
 
 // ---------------- QUERIES / SUGGESTIONS / REPORTS / HELP ----------------

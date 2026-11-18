@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'main.dart';
 import 'notify.dart';
-import 'screens.dart';
+import 'pages.dart';
+import 'students.dart';
+import 'fees.dart';
+import 'equipment.dart';
 
 class Home extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -37,7 +40,8 @@ class _HomeState extends State<Home> {
       if (role == 'student') ('Passport', Icons.badge_outlined, const PassportPage()),
       if (role != 'student' && Api.can('students.view')) ('Students', Icons.groups_outlined, const StudentsPage()),
       if (role != 'student' && Api.can('attendance.mark')) ('Attendance', Icons.event_available_outlined, const AttendancePage()),
-      if (role == 'student' || Api.can('fees.view')) ('Fees', Icons.receipt_long_outlined, const FeesPage()),
+      if (role == 'student' || (role == 'staff' && Api.can('fees.view'))) ('Fees', Icons.receipt_long_outlined, const FeesPage()),
+      if (role == 'staff' && Api.can('equipment.view')) ('Equipment', Icons.inventory_2_outlined, const EquipmentBody()),
       if (role == 'owner') ('More', Icons.apps, MorePage(onSignOut: _out)) else ('Account', Icons.person_outline, AccountPage(onSignOut: _out)),
     ];
     if (tab >= pages.length) tab = 0;

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Plus, Pencil, Upload, Trophy, Swords, Trash2 } from 'lucide-react'
 import { API, api, getToken, useApi, useAuth, can, inr, fdate, age, cx } from '../lib'
-import { Card, Stat, Tabs, Table, Badge, Btn, Loading, ErrorMsg, Empty, AuthImg, FormModal, Field } from '../components/ui'
+import { Card, Stat, Tabs, Table, Badge, Btn, Loading, ErrorMsg, Empty, AuthImg, FormModal, Field, Modal } from '../components/ui'
 import { DeleteStudent } from '../components/DeleteStudent'
 import { PayButton } from './Fees'
 
@@ -26,7 +26,9 @@ export const studentFields: Field[] = [
   { name: 'remarks', label: 'Remarks', type: 'textarea' },
 ]
 
-const CATEGORIES = ['Sub-Junior', 'Junior', 'Cadet', 'Senior', 'District', 'State', 'National', 'Zonal', 'International'].map((v) => ({ value: v, label: v }))
+const opt = (a: string[]) => a.map((v) => ({ value: v, label: v }))
+const CATEGORIES = opt(['Sub Junior', 'Cadet', 'Junior', 'Senior'])
+const LEVELS = opt(['District', 'Zonal', 'State', 'National', 'International'])
 
 export function MyPassport() {
   const { data, loading, error, reload } = useApi<any>('/api/me/student')
@@ -92,7 +94,7 @@ function StudentView({ d, reload }: { d: any; reload: () => void }) {
   const s = d.student
   const tabs = ['Passport', 'Personal', ...(d.canSeeMedical ? ['Medical'] : []), 'Sports', 'Achievements', 'Academics', 'Attendance', 'Fees', 'Equipment', 'Photos']
   const [tab, setTab] = useState('Passport')
-  const [modal, setModal] = useState<'edit' | 'enroll' | 'ach' | 'match' | 'acad' | 'delete' | null>(null)
+  const [modal, setModal] = useState<'edit' | 'enroll' | 'ach' | 'match' | 'acad' | 'delete' | 'feeplan' | null>(null)
   const edit = can(me, 'students.edit')
   const addAch = can(me, 'achievements.edit')
   const sportOpts = useApi<any>('/api/sports').data?.sports.map((x: any) => ({ value: x.id, label: x.name })) ?? []
@@ -183,7 +185,7 @@ function StudentView({ d, reload }: { d: any; reload: () => void }) {
           <Card>
             <div className="mb-3 flex items-center justify-between"><h2 className="flex items-center gap-2 font-semibold"><Swords size={18} className="text-sky" /> Matches attended</h2>
               {addAch && <Btn variant="ghost" onClick={() => setModal('match')}><Plus size={14} /> Add</Btn>}</div>
-            <Table rows={d.matches} cols={[{ head: 'Event', cell: (m: any) => m.event }, { head: 'Sport', cell: (m: any) => m.sport || '-' }, { head: 'Category', cell: (m: any) => m.category || '-' }, { head: 'Date', cell: (m: any) => fdate(m.event_date) }, { head: 'Result', cell: (m: any) => m.result || '-' }]} />
+            <Table rows={d.matches} cols={[{ head: 'Event', cell: (m: any) => m.event }, { head: 'Sport', cell: (m: any) => m.sport || '-' }, { head: 'Level', cell: (m: any) => m.category || '-' }, { head: 'Age category', cell: (m: any) => m.age_category || '-' }, { head: 'Date', cell: (m: any) => fdate(m.event_date) }, { head: 'Result', cell: (m: any) => m.result || '-' }]} />
           </Card>
         </div>
       )}
@@ -204,6 +206,12 @@ function StudentView({ d, reload }: { d: any; reload: () => void }) {
         </Card>
       )}
 
+      {tab === 'Fees' && me?.role === 'owner' && (
+        <Card className="mb-4">
+          <div className="mb-2 flex items-center justify-between"><h2 className="font-semibold">Fee structure</h2><Btn variant="ghost" onClick={() => setModal('feeplan')}><Pencil size={14} /> Assign</Btn></div>
+          {d.feePlans?.length ? d.feePlans.map((p: any) => <div key={p.plan_id} className="flex justify-between border-b border-line/60 py-2 text-sm last:border-0"><span>{p.sport}: {p.name} <span className="text-mute">({p.period})</span></span><b>{inr(p.custom_amount ?? p.amount)}{p.custom_amount != null && <span className="ml-1 text-xs font-normal text-mute">custom</span>}</b></div>) : <p className="text-sm text-mute">No plan assigned. The sport's default monthly plan applies when bills are generated.</p>}
+        </Card>
+      )}
       {tab === 'Fees' && (
         <Card>
           <Table rows={d.fees} empty="Fee details are not available for your role" cols={[
@@ -232,6 +240,7 @@ function StudentView({ d, reload }: { d: any; reload: () => void }) {
           </div>
         </div>
       )}
+      {modal === 'feeplan' && <FeePlanModal studentId={s.id} assigned={d.feePlans ?? []} onClose={() => setModal(null)} onSaved={reload} />}
       {modal === 'delete' && <DeleteStudent s={s} onClose={() => setModal(null)} />}
 
       {modal === 'edit' && <FormModal title="Edit student" fields={studentFields} initial={s} onClose={() => setModal(null)} onSubmit={async (v) => { await api(`/api/students/${s.id}`, { method: 'PATCH', body: v }); reload() }} />}
@@ -244,10 +253,10 @@ function StudentView({ d, reload }: { d: any; reload: () => void }) {
           { name: 'weapon', label: 'Fencing weapon (if fencing)', type: 'select', options: ['Epee', 'Foil', 'Sabre'].map((x) => ({ value: x, label: x })) },
           { name: 'rating', label: 'Chess rating (if chess)', type: 'number' }]} />}
       {modal === 'ach' && <FormModal title="Add achievement" onClose={() => setModal(null)} onSubmit={async (v) => { await api(`/api/students/${s.id}/achievements`, { body: v }); reload() }}
-        fields={[{ name: 'title', label: 'Title / event', required: true, span: 2 }, { name: 'sport_id', label: 'Sport', type: 'select', options: sportOpts }, { name: 'level', label: 'Level', type: 'select', options: CATEGORIES },
+        fields={[{ name: 'title', label: 'Title / event', required: true, span: 2 }, { name: 'sport_id', label: 'Sport', type: 'select', options: sportOpts }, { name: 'level', label: 'Level (District / Zonal / State)', type: 'select', options: LEVELS }, { name: 'age_category', label: 'Age category', type: 'select', options: CATEGORIES },
           { name: 'position', label: 'Position / medal' }, { name: 'event_date', label: 'Date', type: 'date' }, { name: 'cash_prize', label: 'Cash prize (Rs)', type: 'number' }]} />}
       {modal === 'match' && <FormModal title="Add match" onClose={() => setModal(null)} onSubmit={async (v) => { await api(`/api/students/${s.id}/matches`, { body: v }); reload() }}
-        fields={[{ name: 'event', label: 'Event', required: true, span: 2 }, { name: 'sport_id', label: 'Sport', type: 'select', options: sportOpts }, { name: 'category', label: 'Category', type: 'select', options: CATEGORIES },
+        fields={[{ name: 'event', label: 'Event', required: true, span: 2 }, { name: 'sport_id', label: 'Sport', type: 'select', options: sportOpts }, { name: 'category', label: 'Level (District / Zonal / State)', type: 'select', options: LEVELS }, { name: 'age_category', label: 'Age category', type: 'select', options: CATEGORIES },
           { name: 'event_date', label: 'Date', type: 'date' }, { name: 'result', label: 'Result' }]} />}
       {modal === 'acad' && <FormModal title="Add academic result" onClose={() => setModal(null)} onSubmit={async (v) => { await api(`/api/students/${s.id}/academic`, { body: v }); reload() }}
         fields={[{ name: 'year', label: 'Academic year', required: true, defaultValue: '2025-26' }, { name: 'term', label: 'Term', required: true }, { name: 'percentage', label: 'Percentage', type: 'number', required: true }, { name: 'notes', label: 'Notes', type: 'textarea' }]} />}
@@ -255,9 +264,34 @@ function StudentView({ d, reload }: { d: any; reload: () => void }) {
   )
 }
 
+function FeePlanModal({ studentId, assigned, onClose, onSaved }: { studentId: number; assigned: any[]; onClose: () => void; onSaved: () => void }) {
+  const plans = useApi<any>('/api/fee-plans').data?.plans ?? []
+  const [sel, setSel] = useState<Record<number, string | null>>(() => Object.fromEntries(assigned.map((p) => [p.plan_id, p.custom_amount != null ? String(p.custom_amount) : ''])))
+  const [err, setErr] = useState('')
+  const save = async () => {
+    try { await api(`/api/students/${studentId}/fee-plans`, { method: 'PUT', body: { plans: Object.entries(sel).map(([id, amt]) => ({ plan_id: Number(id), custom_amount: amt })) } }); onSaved(); onClose() } catch (e: any) { setErr(e.message) }
+  }
+  return (
+    <Modal title="Assign fee structure" onClose={onClose}>
+      {!plans.length && <p className="text-sm text-mute">No fee plans yet. Create them on the Fees page under Fee structure.</p>}
+      <div className="space-y-2">
+        {plans.filter((p: any) => p.active).map((p: any) => (
+          <div key={p.id} className="flex items-center gap-3 rounded-md border border-line p-3 text-sm">
+            <input type="checkbox" checked={p.id in sel} onChange={(e) => setSel((o) => { const n = { ...o }; if (e.target.checked) n[p.id] = ''; else delete n[p.id]; return n })} className="h-4 w-4" aria-label={p.name} />
+            <div className="flex-1"><b>{p.sport}: {p.name}</b><div className="text-xs text-mute">{inr(p.amount)} {p.period}</div></div>
+            {p.id in sel && <input type="number" placeholder="Custom amount" value={sel[p.id] ?? ''} onChange={(e) => setSel((o) => ({ ...o, [p.id]: e.target.value }))} className="w-32 rounded-md border border-line bg-soft px-2 py-1.5" />}
+          </div>
+        ))}
+      </div>
+      {err && <p className="mt-3 text-sm text-danger" role="alert">{err}</p>}
+      <div className="mt-4 flex justify-end gap-2"><Btn variant="ghost" onClick={onClose}>Cancel</Btn><Btn onClick={save}>Save</Btn></div>
+    </Modal>
+  )
+}
+
 const AchCard = ({ a }: { a: any }) => (
   <div className="rounded-md border border-line bg-soft p-4">
-    <div className="flex items-center justify-between"><span className="text-sm font-semibold text-brand">{a.position || 'Participant'}</span>{a.level && <Badge tone="stored">{a.level}</Badge>}</div>
+    <div className="flex items-center justify-between"><span className="text-sm font-semibold text-brand">{a.position || 'Participant'}</span><span className="flex gap-1">{a.level && <Badge tone="stored">{a.level}</Badge>}{a.age_category && <Badge>{a.age_category}</Badge>}</span></div>
     <div className="mt-1 text-sm">{a.title}</div>
     <div className="mt-1 text-xs text-mute">{a.sport} · {fdate(a.event_date)}</div>
   </div>

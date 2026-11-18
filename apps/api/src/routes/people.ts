@@ -167,8 +167,8 @@ people.post('/students/:id/achievements', needPerm('achievements.edit'), async (
   const b = await c.req.json<any>()
   if (!b.title) return c.json({ error: 'Title required' }, 400)
   const r = await run(c.env.DB,
-    'INSERT INTO achievements (student_id, sport_id, title, level, position, event_date, cash_prize, photo_key) VALUES (?,?,?,?,?,?,?,?)',
-    id, b.sport_id ?? null, b.title, str(b.level), str(b.position), str(b.event_date), num(b.cash_prize), str(b.photo_key))
+    'INSERT INTO achievements (student_id, sport_id, title, level, position, event_date, cash_prize, photo_key, age_category) VALUES (?,?,?,?,?,?,?,?,?)',
+    id, b.sport_id ?? null, b.title, str(b.level), str(b.position), str(b.event_date), num(b.cash_prize), str(b.photo_key), str(b.age_category))
   if (num(b.cash_prize) > 0) {
     await run(c.env.DB, "INSERT INTO incomes (type, amount, student_id, note, income_date) VALUES ('cash_prize',?,?,?,?)",
       num(b.cash_prize), id, `Prize: ${b.title}`, str(b.event_date) ?? new Date().toISOString().slice(0, 10))
@@ -181,8 +181,8 @@ people.post('/students/:id/matches', needPerm('achievements.edit'), async (c) =>
   if (!(await canSeeStudent(c, id))) return c.json({ error: 'Forbidden' }, 403)
   const b = await c.req.json<any>()
   if (!b.event) return c.json({ error: 'Event required' }, 400)
-  await run(c.env.DB, 'INSERT INTO matches (student_id, sport_id, event, category, event_date, result, photo_key) VALUES (?,?,?,?,?,?,?)',
-    id, b.sport_id ?? null, b.event, str(b.category), str(b.event_date), str(b.result), str(b.photo_key))
+  await run(c.env.DB, 'INSERT INTO matches (student_id, sport_id, event, category, event_date, result, photo_key, age_category) VALUES (?,?,?,?,?,?,?,?)',
+    id, b.sport_id ?? null, b.event, str(b.category), str(b.event_date), str(b.result), str(b.photo_key), str(b.age_category))
   return c.json({ ok: true }, 201)
 })
 
@@ -217,9 +217,10 @@ export async function studentProfile(c: Ctx, id: number) {
   if (a.role === 'staff' && !a.perms.includes('students.contact'))
     for (const f of ['address', 'parent_name', 'parent_phone', 'parent_email', 'parent_occupation', 'identification_mark', 'birthplace']) student[f] = null
   const seeMedical = a.role === 'owner' || a.role === 'student' || (a.role === 'staff' && a.perms.includes('students.medical'))
+  const feePlans = a.role === 'owner' ? await all(db, 'SELECT sfp.plan_id, sfp.custom_amount, fp.name, fp.amount, fp.period, sp.name AS sport FROM student_fee_plans sfp JOIN fee_plans fp ON fp.id = sfp.plan_id JOIN sports sp ON sp.id = fp.sport_id WHERE sfp.student_id = ?', id) : []
   const medical = seeMedical ? await one<any>(db, 'SELECT * FROM student_medical WHERE student_id = ?', id) : null
   return {
-    medical, canSeeMedical: seeMedical, student, enrollments, achievements, matches, academic, media, attendance, fees, equipment,
+    feePlans, medical, canSeeMedical: seeMedical, student, enrollments, achievements, matches, academic, media, attendance, fees, equipment,
     attendanceSummary: {
       present: attendance.filter((x: any) => x.status === 'present').length,
       late: attendance.filter((x: any) => x.status === 'late').length,
@@ -286,3 +287,27 @@ people.get('/staff/:id', async (c) => {
 })
 
 people.get('/sports', async (c) => c.json({ sports: await all(c.env.DB, 'SELECT * FROM sports ORDER BY name') }))
+people.post('/sports', ownerOnly, async (c) => {
+  const b = await c.req.json<any>()
+  const name = str(b.name)
+  if (!name || name.length < 2) return c.json({ error: 'Enter a section name' }, 400)
+  if (await one(c.env.DB, 'SELECT 1 AS x FROM sports WHERE name = ? COLLATE NOCASE', name)) return c.json({ error: 'That section already exists' }, 400)
+  const r = await run(c.env.DB, 'INSERT INTO sports (name) VALUES (?)', name.slice(0, 40))
+  await audit(c, 'sport.add', { name })
+  return c.json({ id: r.meta.last_row_id }, 201)
+})
+
+// student fee structure (owner)
+people.get('/students/:id/fee-plans', ownerOnly, async (c) =>
+  c.json({ assigned: await all(c.env.DB, 'SELECT sfp.plan_id, sfp.custom_amount, fp.name, fp.amount, fp.period, sp.name AS sport FROM student_fee_plans sfp JOIN fee_plans fp ON fp.id = sfp.plan_id JOIN sports sp ON sp.id = fp.sport_id WHERE sfp.student_id = ?', num(c.req.param('id'))) }))
+people.put('/students/:id/fee-plans', ownerOnly, async (c) => {
+  const id = num(c.req.param('id'))
+  const b = await c.req.json<any>()
+  const list: any[] = Array.isArray(b.plans) ? b.plans : []
+  await c.env.DB.batch([
+    c.env.DB.prepare('DELETE FROM student_fee_plans WHERE student_id = ?').bind(id),
+    ...list.map((p) => c.env.DB.prepare('INSERT INTO student_fee_plans (student_id, plan_id, custom_amount) VALUES (?,?,?)').bind(id, num(p.plan_id), p.custom_amount === '' || p.custom_amount == null ? null : num(p.custom_amount))),
+  ])
+  await audit(c, 'student.feeplans', { id, count: list.length })
+  return c.json({ ok: true })
+})

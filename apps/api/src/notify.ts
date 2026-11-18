@@ -12,7 +12,7 @@ export async function notifyParent(
   const nid = res.meta.last_row_id
   if (!env.WHATSAPP_TOKEN || !env.WHATSAPP_PHONE_ID || !s.parent_phone) {
     await run(env.DB, "UPDATE notifications SET status = 'stored' WHERE id = ?", nid)
-    return
+    return nid
   }
   try {
     const to = s.parent_phone.replace(/\D/g, '')
@@ -32,6 +32,7 @@ export async function notifyParent(
   } catch (e) {
     await run(env.DB, "UPDATE notifications SET status = 'failed', error = ? WHERE id = ?", String(e), nid)
   }
+  return nid
 }
 
 export const fmtTime = (hhmm: string) => {
