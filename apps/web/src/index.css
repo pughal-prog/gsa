@@ -15,7 +15,10 @@
   --color-brand-dark: #08357a;
   --color-flame: #e31b23;
   --color-leaf: #1e8a3c;
-  --color-sky: #0aa5e8;
+  --color-sky: #00a0e0;
+  --color-navy: #062b57;
+  --color-navy2: #0a3d7a;
+  --color-gold: #f5b82e;
   --color-mute: #5d6b86;
   --color-danger: #d92d20;
   --color-warn: #c77700;
@@ -36,3 +39,13 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
   .rise { animation: rise .45s ease both; }
   @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 }
+
+/* landing */
+html { scroll-behavior: smooth; }
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+.hero-grid { background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.12) 1px, transparent 0); background-size: 26px 26px; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.marquee { animation: marquee 28s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
