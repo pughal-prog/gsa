@@ -20,7 +20,7 @@ class StaffPage extends StatelessWidget {
               itemBuilder: (c, i) {
                 if (i == 0) {
                   return Align(alignment: Alignment.centerRight, child: TextButton.icon(icon: const Icon(Icons.ios_share, size: 18), label: const Text('PDF / Excel'), onPressed: () => exportData(c, title: 'Staff list', filename: 'staff',
-                      head: ['Name', 'Sport', 'Phone', 'Experience (yrs)', 'Students'], rows: [for (final r in rows) [s(r['name']), s(r['sport']), s(r['phone']), s(r['experience_years']), s(r['students'])]]));
+                      head: ['Name', 'Sport', 'Phone', 'Experience (yrs)', 'Students'], rows: [for (final r in rows) [s(r['name']), s(r['sport']), s(r['phone']), s(r['experience_years']), s(r['students'])]])));
                 }
                 final r = rows[i - 1];
                 return Card(child: ListTile(
