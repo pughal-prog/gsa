@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState, FormEvent } from 'react'
 import { X } from 'lucide-react'
 import { API, getToken, cx } from '../lib'
+import { CountUp } from './fx'
 
 export const Card = ({ children, className }: { children: ReactNode; className?: string }) => (
   <div className={cx('rounded-lg border border-line bg-surface p-5', className)}>{children}</div>
@@ -16,10 +17,24 @@ export const PageHeader = ({ title, sub, action }: { title: string; sub?: string
   </div>
 )
 
+/** Numbers count up; text such as "Rs 12,000" keeps its symbols and animates the digits. */
+function animate(v: ReactNode): ReactNode {
+  if (typeof v === 'number') return <CountUp value={v} />
+  if (typeof v === 'string') {
+    const m = v.match(/^(\D*)(-?[\d,]+(?:\.\d+)?)(\D*)$/)
+    if (m) {
+      const num = Number(m[2].replace(/,/g, ''))
+      const dec = (m[2].split('.')[1] ?? '').length
+      if (Number.isFinite(num)) return <>{m[1]}<CountUp value={num} format={(n) => (dec ? n.toFixed(dec) : Math.round(n).toString()).replace(/\B(?=(\d{3})+(?!\d))(?<!\.\d*)/g, ',')} />{m[3]}</>
+    }
+  }
+  return v
+}
+
 export const Stat = ({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: string; tone?: 'good' | 'bad' | 'warn' }) => (
-  <Card className="rise border-t-4 border-t-ink">
+  <Card className="rise lift border-t-4 border-t-ink">
     <div className="label text-mute">{label}</div>
-    <div className={cx('mt-2 font-display text-3xl font-semibold', tone === 'good' && 'text-leaf', tone === 'bad' && 'text-danger', tone === 'warn' && 'text-warn')}>{value}</div>
+    <div className={cx('mt-2 font-display text-3xl font-semibold', tone === 'good' && 'text-leaf', tone === 'bad' && 'text-danger', tone === 'warn' && 'text-warn')}>{animate(value)}</div>
     {hint && <div className="mt-1 text-xs text-mute">{hint}</div>}
   </Card>
 )
@@ -42,7 +57,13 @@ export const Btn = ({ variant = 'primary', className, ...p }: React.ButtonHTMLAt
 )
 
 export const Empty = ({ text }: { text: string }) => <div className="py-10 text-center text-sm text-mute">{text}</div>
-export const Loading = () => <div className="py-16 text-center text-sm text-mute">Loading...</div>
+export const Loading = () => (
+  <div className="space-y-3 py-6" aria-busy="true" aria-label="Loading">
+    <div className="skeleton h-8 w-48" />
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-24" />)}</div>
+    {[0, 1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-12" />)}
+  </div>
+)
 export const ErrorMsg = ({ text }: { text: string }) => <div className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger" role="alert">{text}</div>
 
 export type Col<T> = { head: string; cell: (r: T) => ReactNode; className?: string }
@@ -54,7 +75,7 @@ export function Table<T>({ cols, rows, onRow, empty = 'Nothing here yet' }: { co
         <thead><tr className="border-b-2 border-ink/80 label text-ink">
           {cols.map((c) => <th key={c.head} className={cx('px-3 py-2 font-medium', c.className)}>{c.head}</th>)}
         </tr></thead>
-        <tbody>
+        <tbody className="stagger">
           {rows.map((r, i) => (
             <tr key={i} onClick={onRow ? () => onRow(r) : undefined} className={cx('border-b border-line/60', onRow && 'cursor-pointer hover:bg-soft/70')}>
               {cols.map((c) => <td key={c.head} className={cx('px-3 py-3', c.className)}>{c.cell(r)}</td>)}

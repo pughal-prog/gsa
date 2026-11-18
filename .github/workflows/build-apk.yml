@@ -22,6 +22,12 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: { flutter-version: '3.24.5', channel: stable, cache: true }
 
+      - name: Use the fixed signing key (keeps Google sign-in and app updates working)
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then mkdir -p ~/.android && echo "$KS" | base64 -d > ~/.android/debug.keystore && echo "fixed key installed"; else echo "no ANDROID_KEYSTORE_B64 secret, using a temporary key"; fi
+
       - name: Generate Android project
         run: flutter create --platforms=android --project-name gsa_app --org in.globalsportsacademy .
 

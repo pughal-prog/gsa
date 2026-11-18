@@ -8,6 +8,8 @@ import 'students.dart';
 import 'fees.dart';
 import 'equipment.dart';
 import 'chat.dart';
+import 'motion.dart';
+import 'package:flutter/services.dart';
 
 class Home extends StatefulWidget {
   final VoidCallback onSignOut;
@@ -63,10 +65,10 @@ class _HomeState extends State<Home> {
             ),
         ],
       ),
-      body: pages[tab].$3,
+      body: AnimatedSwitcher(duration: const Duration(milliseconds: 260), switchInCurve: Curves.easeOutCubic, transitionBuilder: (w, a) => FadeTransition(opacity: a, child: SlideTransition(position: Tween(begin: const Offset(0, 0.015), end: Offset.zero).animate(a), child: w)), child: KeyedSubtree(key: ValueKey(tab), child: pages[tab].$3)),
       bottomNavigationBar: NavigationBar(
         selectedIndex: tab,
-        onDestinationSelected: (i) => setState(() => tab = i),
+        onDestinationSelected: (i) { HapticFeedback.selectionClick(); setState(() => tab = i); },
         destinations: [for (final p in pages) NavigationDestination(icon: Icon(p.$2), label: p.$1)],
       ),
     );

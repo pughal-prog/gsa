@@ -91,7 +91,7 @@ function Shell() {
         {open && (
           <div className="fixed inset-x-0 top-[76px] z-30 max-h-[80vh] overflow-y-auto border-b border-line bg-surface p-4 shadow-xl lg:hidden">{nav}<div className="mt-3">{userBox}</div></div>
         )}
-        <main className="mx-auto max-w-7xl p-4 sm:p-8"><Outlet /></main>
+        <main key={loc.pathname} className="page-in mx-auto max-w-7xl p-4 sm:p-8"><Outlet /></main>
       </div>
     </div>
   )

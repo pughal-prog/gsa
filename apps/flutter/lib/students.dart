@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'motion.dart';
 import 'api.dart';
 import 'common.dart';
 import 'export.dart';
@@ -32,13 +33,13 @@ class _StudentsPageState extends State<StudentsPage> {
                   ]);
                 }
                 final r = rows[i - 1];
-                return Card(child: ListTile(
+                return Reveal(index: i, child: Card(child: ListTile(
                   leading: CircleAvatar(backgroundColor: brand, child: Text('${r['name']}'.isEmpty ? '?' : '${r['name']}'.substring(0, 1), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))),
                   title: Text('${r['name']}', style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text('${r['admission_no']} · ${s(r['sports'])}'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () async { await Navigator.push(c, MaterialPageRoute(builder: (_) => StudentScreen(id: r['id'] as int, name: '${r['name']}'))); reload(); },
-                ));
+                )));
               },
             ));
           },

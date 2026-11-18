@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'api.dart';
 import 'main.dart';
+import 'google.dart';
+import 'motion.dart';
 
 /// Home page shown before sign in: auto-running academy photos plus Sign in and Sign up.
 class Welcome extends StatefulWidget {
@@ -50,20 +52,20 @@ class _WelcomeState extends State<Welcome> {
             padding: const EdgeInsets.all(24),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Spacer(),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(20)),
-                  child: const Text('Indoor sports academy · Namakkal', style: TextStyle(color: Colors.white, fontSize: 12))),
+              Reveal(delay: const Duration(milliseconds: 100), child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(20)),
+                  child: const Text('Indoor sports academy · Namakkal', style: TextStyle(color: Colors.white, fontSize: 12)))),
               const SizedBox(height: 14),
-              const Text('Global Sports\nAcademy', style: TextStyle(color: Colors.white, fontSize: 38, fontWeight: FontWeight.w800, height: 1.05)),
+              const Reveal(delay: Duration(milliseconds: 220), child: Text('Global Sports\nAcademy', style: TextStyle(color: Colors.white, fontSize: 38, fontWeight: FontWeight.w800, height: 1.05))),
               const SizedBox(height: 8),
-              const Text('Fencing · Table tennis · Carrom · Chess · Fitness', style: TextStyle(color: Colors.white70)),
+              const Reveal(delay: Duration(milliseconds: 340), child: Text('Fencing · Table tennis · Carrom · Chess · Fitness', style: TextStyle(color: Colors.white70))),
               const SizedBox(height: 28),
-              FilledButton(onPressed: () => _open(SignIn(onSignedIn: widget.onSignedIn)), child: const Text('Sign in')),
+              Reveal(delay: const Duration(milliseconds: 460), child: FilledButton(onPressed: () => _open(SignIn(onSignedIn: widget.onSignedIn)), child: const Text('Sign in'))),
               const SizedBox(height: 10),
-              OutlinedButton(
+              Reveal(delay: const Duration(milliseconds: 540), child: OutlinedButton(
                 onPressed: () => _open(const SignUp()),
                 style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70), minimumSize: const Size.fromHeight(50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 child: const Text('Create an account'),
-              ),
+              )),
               const SizedBox(height: 8),
             ]),
           ),
@@ -99,6 +101,37 @@ class _SignInState extends State<SignIn> {
     }
   }
 
+  Future<void> google() async {
+    setState(() { busy = true; err = ''; });
+    GoogleLogin? g;
+    try {
+      g = await pickGoogleAccount();
+      if (g == null) return;
+      await Api.loginGoogle(g.idToken);
+      if (!mounted) return;
+      Navigator.popUntil(context, (r) => r.isFirst);
+      widget.onSignedIn();
+    } on ApiError catch (e) {
+      if (!mounted) return;
+      if (e.code == 'not_registered') {
+        final go = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
+          title: const Text('No account yet'),
+          content: const Text('This Google email is not registered with the academy. Create an account and the owner will approve it.'),
+          actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Create account'))],
+        ));
+        if (go == true && mounted) {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SignUp(email: g?.email, name: g?.name)));
+        }
+      } else {
+        setState(() => err = e.message);
+      }
+    } catch (e) {
+      if (mounted) setState(() => err = 'Google sign-in did not work. ${e.toString().replaceAll('Exception: ', '')}');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,6 +148,21 @@ class _SignInState extends State<SignIn> {
         if (err.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 12), child: Text(err, style: const TextStyle(color: Colors.red))),
         const SizedBox(height: 20),
         FilledButton(onPressed: busy ? null : go, child: busy ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Sign in')),
+        const SizedBox(height: 14),
+        Row(children: const [Expanded(child: Divider()), Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('or', style: TextStyle(color: Colors.black45))), Expanded(child: Divider())]),
+        const SizedBox(height: 14),
+        Pressable(
+          onTap: busy ? null : google,
+          child: Container(
+            height: 50,
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFD8D3C7))),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: const [
+              Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF4285F4))),
+              SizedBox(width: 10),
+              Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.w600)),
+            ]),
+          ),
+        ),
         TextButton(onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignUp())), child: const Text('New here? Create an account')),
       ]),
     );
@@ -122,7 +170,8 @@ class _SignInState extends State<SignIn> {
 }
 
 class SignUp extends StatefulWidget {
-  const SignUp({super.key});
+  final String? email, name;
+  const SignUp({super.key, this.email, this.name});
   @override
   State<SignUp> createState() => _SignUpState();
 }
@@ -132,6 +181,13 @@ class _SignUpState extends State<SignUp> {
   final c = {for (final k in ['name', 'email', 'phone', 'password', 'parent_name']) k: TextEditingController()};
   bool busy = false, done = false;
   String err = '';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.email != null) c['email']!.text = widget.email!;
+    if (widget.name != null) c['name']!.text = widget.name!;
+  }
 
   Future<void> go() async {
     setState(() { busy = true; err = ''; });

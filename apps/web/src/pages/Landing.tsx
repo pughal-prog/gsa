@@ -7,6 +7,7 @@ import {
 import { Logo } from '../components/ui'
 import Carousel from '../components/Carousel'
 import ChatWidget from '../components/ChatWidget'
+import { CountUp, Tilt, Magnetic, SplitWords, ScrollProgress, useScrolled } from '../components/fx'
 import { API, useApi, useAuth } from '../lib'
 import { SITE, fullAddress, mapsUrl } from '../site'
 
@@ -106,6 +107,7 @@ const APK_URL = 'https://github.com/pughal-prog/gsa/releases/latest/download/Glo
 
 export default function Landing() {
   const { me } = useAuth()
+  const scrolled = useScrolled()
   const gallery = useApi<any>('/public/gallery')
   const reviewsQ = useApi<any>('/public/reviews')
   const sportsQ = useApi<any>('/public/sports')
@@ -122,6 +124,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-white text-ink">
+      <ScrollProgress />
       {/* announcement bar */}
       <div className="bg-flame text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 px-4 py-2 text-center text-xs font-semibold sm:text-sm">
@@ -132,7 +135,7 @@ export default function Landing() {
       </div>
 
       {/* header */}
-      <header className="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur">
+      <header className={`glass-head sticky top-0 z-40 border-b border-line bg-white ${scrolled ? "scrolled" : ""}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2.5 sm:px-8">
           <Link to="/" aria-label="Global Sports Academy home"><Logo small className="!h-12" /></Link>
           <nav className="hidden items-center gap-7 text-sm font-semibold text-ink/70 lg:flex" aria-label="Site">
@@ -160,14 +163,15 @@ export default function Landing() {
       <section className="relative overflow-hidden bg-navy text-white">
         {slides.length > 0 && <Carousel slides={slides} interval={5200} className="absolute inset-0 opacity-30" />}
         <div className="absolute inset-0 bg-gradient-to-br from-navy via-navy/90 to-navy2/70" />
+        <div className="aurora" />
         <div className="hero-grid absolute inset-0" />
         <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-4 pb-28 pt-14 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:pb-32 lg:pt-20">
           <div>
             <Eyebrow light>Indoor sports academy · Namakkal</Eyebrow>
-            <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] sm:text-6xl">Where young athletes <span className="text-sky">train</span>, compete and <span className="text-gold">win</span>.</h1>
+            <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] sm:text-6xl" aria-label="Where young athletes train, compete and win."><SplitWords parts={["Where young athletes", { text: "train,", className: "text-sky" }, "compete and", { text: "win.", className: "text-gold" }]} /></h1>
             <p className="mt-6 max-w-xl text-lg text-white/80">Five sports under one roof, certified coaching for every age category, and an app that keeps coaches, parents and students on the same page.</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#trial" className="inline-flex items-center gap-2 rounded-lg bg-flame px-6 py-3.5 font-bold shadow-lg shadow-black/20 transition hover:brightness-110">Book a trial class <ArrowRight size={18} /></a>
+              <Magnetic><a href="#trial" className="inline-flex items-center gap-2 rounded-lg bg-flame px-6 py-3.5 font-bold shadow-lg shadow-black/20 transition hover:brightness-110">Book a trial class <ArrowRight size={18} /></a></Magnetic>
               <a href={`tel:+${SITE.phoneIntl}`} className="inline-flex items-center gap-2 rounded-lg border border-white/40 px-6 py-3.5 font-semibold transition hover:bg-white/10"><Phone size={18} /> {SITE.phone}</a>
             </div>
             <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/80">
@@ -188,10 +192,10 @@ export default function Landing() {
       {/* facts strip overlapping the hero */}
       <div className="relative z-20 mx-auto -mt-10 max-w-6xl px-4 sm:px-8">
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-line shadow-xl shadow-navy/10 md:grid-cols-4">
-          {[[Trophy, '5', 'Sports taught'], [Users, '4', 'Age categories'], [Award, '3', 'Levels: District, Zonal, State'], [Smartphone, 'Web + App', 'For parents and coaches']].map(([I, n, l]: any) => (
+          {[[Trophy, 5, 'Sports taught'], [Users, 4, 'Age categories'], [Award, 3, 'Levels: District, Zonal, State'], [Smartphone, 'Web + App', 'For parents and coaches']].map(([I, n, l]: any) => (
             <div key={l} className="flex items-center gap-3 bg-white px-5 py-5">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand"><I size={22} /></span>
-              <div><div className="font-display text-xl font-extrabold leading-none">{n}</div><div className="mt-1 text-xs text-mute">{l}</div></div>
+              <div><div className="font-display text-xl font-extrabold leading-none">{typeof n === "number" ? <CountUp value={n} /> : n}</div><div className="mt-1 text-xs text-mute">{l}</div></div>
             </div>
           ))}
         </div>
@@ -210,7 +214,7 @@ export default function Landing() {
             const I = s.icon
             return (
               <Reveal key={s.name} delay={i * 60}>
-                <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition hover:-translate-y-1 hover:shadow-xl hover:shadow-navy/10">
+                <Tilt className="h-full rounded-2xl"><article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white">
                   <div className="relative aspect-[16/10] bg-gradient-to-br from-navy to-navy2">
                     {ph.length > 0 ? <Carousel className="absolute inset-0" interval={3800 + i * 500} slides={ph.map((p) => ({ id: p.id, src: src(p.key) }))} /> : <div className="grid h-full place-items-center text-white/30"><I size={64} /></div>}
                     <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-navy">{s.tag}</span>
@@ -220,7 +224,7 @@ export default function Landing() {
                     <p className="mt-3 flex-1 text-sm leading-relaxed text-mute">{s.text}</p>
                     <a href="#trial" className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-brand group-hover:gap-2.5">Try a class <ArrowRight size={16} /></a>
                   </div>
-                </article>
+                </article></Tilt>
               </Reveal>
             )
           })}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'motion.dart';
 import 'api.dart';
 import 'main.dart';
 
@@ -41,7 +42,7 @@ class _LoadState extends State<Load> {
   Widget build(BuildContext context) => FutureBuilder(
         future: f,
         builder: (c, snap) {
-          if (snap.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
+          if (snap.connectionState != ConnectionState.done) return const SkeletonList();
           if (snap.hasError) {
             return Center(child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [
               Text('${snap.error}', textAlign: TextAlign.center), const SizedBox(height: 12), OutlinedButton(onPressed: reload, child: const Text('Retry'))])));

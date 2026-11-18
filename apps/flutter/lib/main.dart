@@ -3,6 +3,7 @@ import 'api.dart';
 import 'notify.dart';
 import 'home.dart';
 import 'login.dart';
+import 'motion.dart';
 
 const ink = Color(0xFF0B1220);
 const brand = ink;
@@ -40,6 +41,7 @@ class _GsaAppState extends State<GsaApp> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
+        pageTransitionsTheme: const PageTransitionsTheme(builders: {TargetPlatform.android: SlideFadeTransitions(), TargetPlatform.iOS: SlideFadeTransitions()}),
         colorScheme: ColorScheme.fromSeed(seedColor: flame, primary: ink, secondary: flame, surface: Colors.white),
         scaffoldBackgroundColor: paper,
         appBarTheme: const AppBarTheme(backgroundColor: ink, foregroundColor: Colors.white, elevation: 0, scrolledUnderElevation: 0, titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),

@@ -80,7 +80,7 @@ export default function Login({ initial = 'signin' }: { initial?: Tab }) {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-      <aside className="brand-panel relative hidden flex-col justify-between p-10 text-white lg:flex">
+      <aside className="brand-panel relative hidden flex-col justify-between overflow-hidden p-10 text-white lg:flex"><div className="aurora" />
         <Link to="/" className="inline-block self-start rounded-lg bg-white p-3 shadow-card"><Logo small className="!h-28" /></Link>
         <div>
           <h2 className="text-4xl font-extrabold leading-tight">Everything about every athlete, in one place.</h2>

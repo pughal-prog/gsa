@@ -6,7 +6,8 @@ const apiUrl = String.fromEnvironment('API_URL', defaultValue: 'https://gsa-api.
 
 class ApiError implements Exception {
   final String message;
-  ApiError(this.message);
+  final String? code;
+  ApiError(this.message, [this.code]);
   @override
   String toString() => message;
 }
@@ -36,7 +37,7 @@ class Api {
     dynamic data;
     try { data = jsonDecode(res.body); } catch (_) { data = {}; }
     if (res.statusCode == 401 && token != null && !path.startsWith('/auth/')) { await saveToken(null); }
-    if (res.statusCode >= 400) throw ApiError((data is Map && data['error'] != null) ? data['error'].toString() : 'Request failed (${res.statusCode})');
+    if (res.statusCode >= 400) throw ApiError((data is Map && data['error'] != null) ? data['error'].toString() : 'Request failed (${res.statusCode})', data is Map ? data['code']?.toString() : null);
     return data;
   }
 
@@ -53,6 +54,13 @@ class Api {
 
   static Future<void> login(String u, String p) async {
     final r = await post('/auth/login', {'username': u, 'password': p});
+    await saveToken(r['token']);
+    me = (await get('/auth/me'))['user'];
+  }
+
+  /// Signs in with a Google ID token. Throws ApiError with code 'not_registered' or 'pending' when the academy has no approved account.
+  static Future<void> loginGoogle(String idToken) async {
+    final r = await post('/auth/google', {'idToken': idToken});
     await saveToken(r['token']);
     me = (await get('/auth/me'))['user'];
   }

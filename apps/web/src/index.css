@@ -49,3 +49,62 @@ html { scroll-behavior: smooth; }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .marquee { animation: marquee 28s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
+
+/* ---------- motion system ---------- */
+.scroll-progress { position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 60; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, var(--color-flame), var(--color-gold), var(--color-sky)); }
+
+/* headline words rise from a mask */
+.word-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .08em; }
+.word { display: inline-block; transform: translateY(110%); animation: word-up .75s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes word-up { to { transform: none; } }
+
+/* slow moving colour fields behind the hero */
+.aurora { position: absolute; inset: -20%; pointer-events: none; filter: blur(70px); opacity: .55;
+  background:
+    radial-gradient(40% 35% at 20% 30%, rgba(0,160,224,.55), transparent 70%),
+    radial-gradient(35% 35% at 80% 25%, rgba(227,27,35,.35), transparent 70%),
+    radial-gradient(45% 40% at 60% 85%, rgba(245,184,46,.28), transparent 70%);
+  animation: aurora 22s ease-in-out infinite alternate; }
+@keyframes aurora { from { transform: translate3d(-3%, -2%, 0) scale(1); } to { transform: translate3d(4%, 3%, 0) scale(1.12); } }
+
+/* cards: tilt with spotlight, and a plain lift for dense lists */
+.tilt { position: relative; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; transform-style: preserve-3d; will-change: transform; }
+.tilt::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .25s ease;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(0,160,224,.14), transparent 60%); }
+.tilt:hover { box-shadow: 0 18px 40px -22px rgba(6,43,87,.45); border-color: rgba(10,61,122,.35); }
+.tilt:hover::after { opacity: 1; }
+.lift { transition: transform .2s ease, box-shadow .2s ease; }
+.lift:hover { transform: translateY(-2px); box-shadow: 0 12px 28px -18px rgba(11,18,32,.4); }
+
+.magnetic { transition: transform .25s cubic-bezier(.2,.8,.2,1); }
+
+/* press feedback and focus on every button and field */
+button:not(:disabled):active, a.press:active { transform: scale(.97); }
+button { transition: transform .12s ease, background-color .2s ease, color .2s ease, border-color .2s ease; }
+input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(0,160,224,.25); border-color: var(--color-sky); transition: box-shadow .2s ease, border-color .2s ease; }
+
+/* header turns frosted once you scroll */
+.glass-head { transition: background-color .3s ease, box-shadow .3s ease, border-color .3s ease; }
+.glass-head.scrolled { background: rgba(255,255,255,.72); backdrop-filter: blur(14px) saturate(1.4); box-shadow: 0 8px 30px -22px rgba(6,43,87,.6); }
+
+/* page change inside the dashboard, and staggered rows */
+.page-in { animation: page-in .35s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes page-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.stagger > * { animation: rise .45s cubic-bezier(.2,.8,.2,1) both; }
+.stagger > *:nth-child(1) { animation-delay: 0ms; } .stagger > *:nth-child(2) { animation-delay: 40ms; } .stagger > *:nth-child(3) { animation-delay: 80ms; }
+.stagger > *:nth-child(4) { animation-delay: 120ms; } .stagger > *:nth-child(5) { animation-delay: 160ms; } .stagger > *:nth-child(6) { animation-delay: 200ms; }
+.stagger > *:nth-child(n+7) { animation-delay: 240ms; }
+
+/* loading skeleton */
+.skeleton { position: relative; overflow: hidden; background: var(--color-softer); border-radius: 6px; }
+.skeleton::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent); animation: shimmer 1.3s infinite; }
+@keyframes shimmer { to { transform: translateX(100%); } }
+
+/* toast / modal entrance */
+@keyframes pop-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+.pop-in { animation: pop-in .25s cubic-bezier(.2,.8,.2,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .word { animation: none; transform: none; } .aurora, .skeleton::after { animation: none; } .page-in, .stagger > *, .pop-in { animation: none; }
+  .tilt, .lift, .magnetic { transition: none; }
+}

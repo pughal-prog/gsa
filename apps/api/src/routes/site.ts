@@ -14,6 +14,10 @@ publicApi.post('/enquiry', async (c) => {
   if (recent && recent.n >= 40) return c.json({ error: 'Too many enquiries right now. Please call us instead.' }, 429)
   await run(c.env.DB, 'INSERT INTO enquiries (name, phone, sport_id, child_age, message) VALUES (?,?,?,?,?)',
     name.slice(0, 80), phone.slice(0, 20), b.sport_id ? num(b.sport_id) : null, str(b.child_age)?.slice(0, 20) ?? null, str(b.message)?.slice(0, 500) ?? null)
+  // in-app alert for the owner (picked up by the app's foreground and background checks)
+  const sp = b.sport_id ? await one<{ name: string }>(c.env.DB, 'SELECT name FROM sports WHERE id = ?', num(b.sport_id)) : null
+  await run(c.env.DB, "INSERT INTO notifications (student_id, type, title, body, status) VALUES (NULL, 'enquiry', ?, ?, 'sent')",
+    'New trial class request', `${name.slice(0, 60)} (${phone.slice(0, 20)})${sp ? ' wants ' + sp.name : ''}${str(b.child_age) ? ', age ' + str(b.child_age)!.slice(0, 10) : ''}. Open Trial enquiries.`)
   // tell the owner by email (only if Resend and OWNER_EMAIL are set); never blocks or fails the visitor
   if (c.env.OWNER_EMAIL) {
     const esc = (t: string) => t.replace(/[<>&]/g, '')

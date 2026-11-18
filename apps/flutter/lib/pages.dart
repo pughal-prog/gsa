@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'motion.dart';
 import 'api.dart';
 import 'common.dart';
 import 'equipment.dart';
@@ -16,14 +17,16 @@ class OverviewPage extends StatelessWidget {
         fetch: () => Api.get('/api/reports/overview'),
         builder: (c, d, reload) {
           final k = d['counts'], m = d['thisMonth'], a = d['attendance'] ?? {};
-          Widget tile(String t, String v, IconData i, Color col) => Expanded(child: Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Icon(i, color: col), const SizedBox(height: 8), Text(v, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)), Text(t, style: const TextStyle(color: Colors.black54, fontSize: 12))]))));
+          var n = 0;
+          Widget tile(String t, num v, IconData i, Color col, {bool money = false}) => Expanded(child: Reveal(index: n++, child: Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Icon(i, color: col), const SizedBox(height: 8), CountUp(v, format: money ? inr : (x) => x.round().toString(), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)), Text(t, style: const TextStyle(color: Colors.black54, fontSize: 12))])))));
+          num nv(dynamic x) => x is num ? x : num.tryParse('$x') ?? 0;
           return RefreshIndicator(onRefresh: () async => reload(), child: ListView(padding: const EdgeInsets.all(16), children: [
-            Row(children: [tile('Active students', '${k['students']}', Icons.groups, brand), const SizedBox(width: 12), tile('Staff', '${k['staff']}', Icons.sports, leaf)]),
+            Row(children: [tile('Active students', nv(k['students']), Icons.groups, brand), const SizedBox(width: 12), tile('Staff', nv(k['staff']), Icons.sports, leaf)]),
             const SizedBox(height: 12),
-            Row(children: [tile('Income this month', inr(m['income']), Icons.trending_up, leaf), const SizedBox(width: 12), tile('Expenses', inr(m['expense']), Icons.trending_down, flame)]),
+            Row(children: [tile('Income this month', nv(m['income']), Icons.trending_up, leaf, money: true), const SizedBox(width: 12), tile('Expenses', nv(m['expense']), Icons.trending_down, flame, money: true)]),
             const SizedBox(height: 12),
-            Row(children: [tile('Pending fees', inr(d['pendingFees']['total']), Icons.receipt_long, const Color(0xFFC77700)), const SizedBox(width: 12), tile('Overdue', inr(d['pendingFees']['overdue']), Icons.warning_amber, flame)]),
+            Row(children: [tile('Pending fees', nv(d['pendingFees']['total']), Icons.receipt_long, const Color(0xFFC77700), money: true), const SizedBox(width: 12), tile('Overdue', nv(d['pendingFees']['overdue']), Icons.warning_amber, flame, money: true)]),
             const SizedBox(height: 16),
             Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Attendance this month', style: TextStyle(fontWeight: FontWeight.w700)), const SizedBox(height: 8),
