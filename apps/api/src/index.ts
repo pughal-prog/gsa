@@ -7,7 +7,7 @@ import { people } from './routes/people'
 import { money, razorpayWebhook } from './routes/money'
 import { ops, device } from './routes/ops'
 import { publicApi, siteApi } from './routes/site'
-import { cctv, approvals } from './routes/extra'
+import { approvals } from './routes/extra'
 import { markAbsentees, sendFeeReminders } from './notify'
 
 const app = new Hono<App>()
@@ -33,7 +33,6 @@ app.route('/api', people)
 app.route('/api', money)
 app.route('/api', ops)
 app.route('/api', siteApi)
-app.route('/api', cctv)
 
 app.onError((e, c) => {
   console.error(e)

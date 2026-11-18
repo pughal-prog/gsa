@@ -10,7 +10,6 @@
     "deploy": "npm run build && wrangler pages deploy dist --project-name globalsportsacademy"
   },
   "dependencies": {
-    "hls.js": "^1.7.4",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.9",
     "lucide-react": "^0.468.0",

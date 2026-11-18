@@ -98,9 +98,9 @@ Real branding and photos, public admission enquiry form, batch timetable and coa
 
 Phone, address and the PIN code live in `apps/web/src/site.ts` (the PIN code is still empty, add it there). Logo files are in `apps/web/public` and `apps/mobile/assets`.
 
-## Update: health records, CCTV, email approvals, PDF, Flutter app
+## Update: health records, email approvals, PDF, Flutter app
 - **Medical info** per student (regular medicine, allergy, surgery, bone damage, other issues, blood group, emergency contact). Owner and the student only; staff need the `students.medical` permission. Parent phone and address are hidden from staff without `students.contact`.
-- **CCTV** (owner only): Cameras page on web and in the app. Add https stream links (HLS, MJPEG, snapshot, embed).
+
 - **Email approval**: set the Worker secret `RESEND_API_KEY` (free Resend account) and optionally `OWNER_EMAIL` and `MAIL_FROM`. The owner gets Approve and Reject buttons by mail. Without the key, approvals still work on the Approvals page.
 - **Gallery and photos work without R2**: files are stored in D1 (max about 1.4 MB each) when no R2 bucket is bound.
 - **Notification bell** shows an unread count on web and mobile.

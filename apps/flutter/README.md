@@ -11,4 +11,3 @@ The Android app. It talks to the same Cloudflare Workers API as the website, so 
 ## Notes
 - The API address is set in the workflow with `--dart-define=API_URL=...`. Change it there when the custom domain is live.
 - Notifications: the app asks for permission on first launch and shows alerts while it is open or running in the background. True push while the app is fully closed needs a Firebase project (free); ask if you want it added.
-- CCTV needs an https stream link from the academy's recorder (HLS `.m3u8`, MJPEG or a snapshot URL).
