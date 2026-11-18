@@ -24,6 +24,7 @@ const steps = [
   { icon: LineChart, t: 'Track progress', d: 'Follow attendance, fees, matches and achievements anytime.' },
 ]
 
+import Carousel from '../components/Carousel'
 const src = (k: string) => `${API}/public/gallery/file/${encodeURIComponent(k)}`
 
 export default function Landing() {
@@ -65,8 +66,11 @@ export default function Landing() {
             </div>
           </div>
           <div className="relative mx-auto w-full max-w-md">
-            <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-flame/15 via-sky/15 to-leaf/15 blur-2xl" />
-            <div className="relative rounded-[2rem] border border-line bg-surface p-6 shadow-card"><Logo className="mx-auto !h-auto w-full" /></div>
+            {photos.length > 0 ? (
+              <div className="rounded-3xl border border-line bg-surface p-3 shadow-card">
+                <Carousel className="aspect-[4/3] rounded-2xl" slides={photos.slice(0, 8).map((p) => ({ id: p.id, src: src(p.key), title: p.caption || p.sport || 'Global Sports Academy', sub: p.sport }))} />
+              </div>
+            ) : <div className="rounded-3xl border border-line bg-surface p-6 shadow-card"><Logo className="mx-auto !h-auto w-full" /></div>}
           </div>
         </div>
       </section>
@@ -76,9 +80,10 @@ export default function Landing() {
         <p className="mt-2 max-w-xl text-mute">Coached by specialists and tracked in the same system, so progress in every sport is visible.</p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {sports.map((s) => (
-            <div key={s.name} className={`rounded-2xl border-t-4 bg-surface p-6 shadow-card transition hover:-translate-y-1 ${s.c.split(' ')[0]}`}>
-              <span className={`grid h-12 w-12 place-items-center rounded-xl ${s.c.split(' ').slice(1).join(' ')}`}><s.icon size={24} /></span>
-              <h3 className="mt-5 text-lg font-bold">{s.name}</h3><p className="mt-2 text-sm text-mute">{s.text}</p>
+            <div key={s.name} className={`overflow-hidden rounded-2xl border-t-4 bg-surface shadow-card transition hover:-translate-y-1 ${s.c.split(' ')[0]}`}>
+              {photos.some((p) => p.sport === s.name) && <Carousel className="aspect-[16/9]" interval={4000 + (s.name.length % 3) * 700} slides={photos.filter((p) => p.sport === s.name).slice(0, 6).map((p) => ({ id: p.id, src: src(p.key) }))} />}
+              <div className="p-6"><span className={`grid h-12 w-12 place-items-center rounded-xl ${s.c.split(' ').slice(1).join(' ')}`}><s.icon size={24} /></span>
+              <h3 className="mt-5 text-lg font-bold">{s.name}</h3><p className="mt-2 text-sm text-mute">{s.text}</p></div>
             </div>
           ))}
         </div>

@@ -25,18 +25,8 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 ::selection { background: var(--color-brand); color: #fff; }
 * { scrollbar-width: thin; scrollbar-color: #b9c5dc transparent; }
 
-.hero-bg {
-  background:
-    radial-gradient(900px 420px at 85% -10%, rgba(10,165,232,.18), transparent 60%),
-    radial-gradient(700px 380px at 0% 0%, rgba(227,27,35,.08), transparent 60%),
-    linear-gradient(180deg, #fff, #f3f6fb);
-}
-.brand-panel {
-  background:
-    radial-gradient(600px 300px at 90% 0%, rgba(10,165,232,.45), transparent 60%),
-    radial-gradient(500px 300px at 0% 100%, rgba(30,138,60,.35), transparent 60%),
-    linear-gradient(145deg, #0b4aa2, #08357a);
-}
+.hero-bg { background: linear-gradient(180deg, #ffffff, #f3f6fb); }
+.brand-panel { background: #0b4aa2; }
 .stripe { background: linear-gradient(90deg, var(--color-flame) 0 33%, var(--color-brand) 33% 66%, var(--color-leaf) 66%); }
 .shadow-card { box-shadow: 0 1px 2px rgba(16,24,40,.05), 0 10px 28px -14px rgba(16,36,80,.18); }
 @media (prefers-reduced-motion: no-preference) {

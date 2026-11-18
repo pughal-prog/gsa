@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { App, all, one, run, can, needPerm, ownerOnly, canSeeStudent, timingSafeEqual, istNow, num, str } from '../lib'
+import { App, all, one, run, can, needPerm, ownerOnly, canSeeStudent, timingSafeEqual, istNow, num, str, putFile, getFile, maxUpload } from '../lib'
 import { recordArrival, notifyParent } from '../notify'
 import { studentProfile } from './people'
 
@@ -49,12 +49,37 @@ device.post('/biometric', async (c) => {
 })
 
 // ---------------- NOTIFICATIONS ----------------
-ops.get('/notifications', async (c) => {
+async function visibleNotifs(c: any, limit: number) {
   const a = c.get('auth')
   if (a.role === 'student')
-    return c.json({ notifications: await all(c.env.DB, 'SELECT id, type, title, body, created_at FROM notifications WHERE student_id = ? ORDER BY id DESC LIMIT 100', a.refId) })
-  if (a.role === 'staff' && !a.perms.includes('students.viewAll')) return c.json({ notifications: [] })
-  return c.json({ notifications: await all(c.env.DB, `SELECT n.*, s.name AS student FROM notifications n LEFT JOIN students s ON s.id = n.student_id ORDER BY n.id DESC LIMIT 200`) })
+    return all<any>(c.env.DB, 'SELECT id, type, title, body, created_at FROM notifications WHERE student_id = ? ORDER BY id DESC LIMIT ?', a.refId, limit)
+  if (a.role === 'staff' && !a.perms.includes('students.viewAll')) return []
+  return all<any>(c.env.DB, `SELECT n.*, s.name AS student FROM notifications n LEFT JOIN students s ON s.id = n.student_id ORDER BY n.id DESC LIMIT ?`, limit)
+}
+ops.get('/notifications', async (c) => {
+  const a = c.get('auth')
+  const list = await visibleNotifs(c, 200)
+  const seen = (await one<any>(c.env.DB, 'SELECT notif_seen_id AS n FROM users WHERE id = ?', a.uid))?.n ?? 0
+  return c.json({ notifications: list, unread: list.filter((n: any) => n.id > seen).length, seenId: seen })
+})
+ops.get('/notifications/unread', async (c) => {
+  const a = c.get('auth')
+  const list = await visibleNotifs(c, 200)
+  const seen = (await one<any>(c.env.DB, 'SELECT notif_seen_id AS n FROM users WHERE id = ?', a.uid))?.n ?? 0
+  const fresh = list.filter((n: any) => n.id > seen)
+  return c.json({ unread: fresh.length, latest: fresh[0] ?? null })
+})
+ops.post('/notifications/seen', async (c) => {
+  const a = c.get('auth')
+  const list = await visibleNotifs(c, 1)
+  if (list[0]) await run(c.env.DB, 'UPDATE users SET notif_seen_id = MAX(notif_seen_id, ?) WHERE id = ?', list[0].id, a.uid)
+  return c.json({ ok: true })
+})
+ops.post('/devices', async (c) => {
+  const { token, platform } = await c.req.json<any>().catch(() => ({} as any))
+  if (!token) return c.json({ error: 'token required' }, 400)
+  await run(c.env.DB, 'INSERT OR REPLACE INTO device_tokens (token, user_id, platform) VALUES (?,?,?)', String(token).slice(0, 300), c.get('auth').uid, str(platform))
+  return c.json({ ok: true })
 })
 ops.post('/notifications/broadcast', ownerOnly, async (c) => {
   const { title, body, studentIds } = await c.req.json<any>()
@@ -97,8 +122,9 @@ ops.post('/media/upload', async (c) => {
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return c.json({ error: 'Only JPEG, PNG or WebP images' }, 400)
   if (file.size > 5 * 1024 * 1024) return c.json({ error: 'Max 5 MB' }, 400)
   if (!can(a, 'achievements.edit') || (studentId && !(await canSeeStudent(c, studentId)))) return c.json({ error: 'Forbidden' }, 403)
+  if (file.size > maxUpload(c.env)) return c.json({ error: 'Image too large' }, 400)
   const key = `${studentId || 'general'}/${crypto.randomUUID()}.${file.type.split('/')[1]}`
-  await c.env.MEDIA.put(key, file.stream(), { httpMetadata: { contentType: file.type } })
+  await putFile(c.env, key, file)
   await run(c.env.DB, 'INSERT INTO media (student_id, kind, r2_key, caption) VALUES (?,?,?,?)', studentId || null, kind, key, str(form.get('caption')))
   if (kind === 'profile' && studentId) await run(c.env.DB, 'UPDATE students SET photo_key = ? WHERE id = ?', key, studentId)
   return c.json({ key }, 201)
@@ -109,9 +135,9 @@ ops.get('/media/*', async (c) => {
   const staffPhoto = !m && (await one(c.env.DB, 'SELECT 1 AS x FROM staff WHERE photo_key = ?', key))
   if (!m && !staffPhoto) return c.notFound()
   if (m?.student_id && !(await canSeeStudent(c, m.student_id))) return c.json({ error: 'Forbidden' }, 403)
-  const obj = await c.env.MEDIA.get(key)
+  const obj = await getFile(c.env, key)
   if (!obj) return c.notFound()
-  return new Response(obj.body, { headers: { 'Content-Type': obj.httpMetadata?.contentType ?? 'image/jpeg', 'Cache-Control': 'private, max-age=3600' } })
+  return new Response(obj.body, { headers: { 'Content-Type': obj.type, 'Cache-Control': 'private, max-age=3600' } })
 })
 
 // ---------------- ROLE HOME ENDPOINTS ----------------

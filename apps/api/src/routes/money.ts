@@ -147,7 +147,7 @@ money.post('/finance/expenses', ownerOnly, async (c) => {
 
 // ---------------- EQUIPMENT & STOCK (owner; staff may view) ----------------
 money.get('/equipment', needPerm('equipment.view'), async (c) =>
-  c.json({ equipment: await all(c.env.DB, `SELECT e.*, sp.name AS sport FROM equipment e LEFT JOIN sports sp ON sp.id = e.sport_id ORDER BY e.name`) }))
+  c.json({ equipment: await all(c.env.DB, `SELECT e.*, sp.name AS sport FROM equipment e LEFT JOIN sports sp ON sp.id = e.sport_id ORDER BY COALESCE(sp.name, 'zzz'), e.name`) }))
 money.post('/equipment', ownerOnly, async (c) => {
   const b = await c.req.json<any>()
   const r = await run(c.env.DB, 'INSERT INTO equipment (name, sport_id, qty, reorder_level, cost_price, sale_price) VALUES (?,?,?,?,?,?)',

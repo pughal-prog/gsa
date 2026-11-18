@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { mailOwnerSignup } from './extra'
 import { App, Ctx, all, one, run, verifyPassword, hashPassword, signToken, verifyGoogleToken, requireAuth, tempPassword, istNow, str } from '../lib'
 
 export const auth = new Hono<App>()
@@ -74,6 +75,7 @@ async function createPending(c: Ctx, b: any): Promise<string | null> {
   } else {
     await run(c.env.DB, 'INSERT INTO staff (user_id, name, phone, joined_on) VALUES (?,?,?,?)', uid, name, phone, istNow().date)
   }
+  try { c.executionCtx.waitUntil(mailOwnerSignup(c.env, new URL(c.req.url).origin, uid as number)) } catch { /* mail is best effort */ }
   return null
 }
 

@@ -7,6 +7,7 @@ import { people } from './routes/people'
 import { money, razorpayWebhook } from './routes/money'
 import { ops, device } from './routes/ops'
 import { publicApi, siteApi } from './routes/site'
+import { cctv, approvals } from './routes/extra'
 import { markAbsentees, sendFeeReminders } from './notify'
 
 const app = new Hono<App>()
@@ -20,6 +21,7 @@ app.use('*', async (c, next) => {
 app.get('/', (c) => c.json({ service: 'Global Sports Academy API', status: 'ok', version: '0.1.0' }))
 
 // Public / machine endpoints (own authentication)
+app.route('/auth', approvals)
 app.route('/auth', auth)
 app.route('/webhooks/razorpay', razorpayWebhook)
 app.route('/device', device)
@@ -31,6 +33,7 @@ app.route('/api', people)
 app.route('/api', money)
 app.route('/api', ops)
 app.route('/api', siteApi)
+app.route('/api', cctv)
 
 app.onError((e, c) => {
   console.error(e)

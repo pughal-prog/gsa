@@ -1,0 +1,71 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps/flutter/**', '.github/workflows/build-apk.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/flutter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: '3.24.5', channel: stable, cache: true }
+
+      - name: Generate Android project
+        run: flutter create --platforms=android --project-name gsa_app --org in.globalsportsacademy .
+
+      - name: Patch Android (permissions, name, icons, desugaring)
+        run: |
+          python3 - <<'PY'
+          import re, glob, shutil, os
+          m = 'android/app/src/main/AndroidManifest.xml'
+          s = open(m).read()
+          perms = '<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n    <uses-permission android:name="android.permission.VIBRATE"/>\n    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>'
+          s = re.sub(r'(<manifest[^>]*>)', r'\1\n    ' + perms, s, count=1)
+          s = re.sub(r'android:label="[^"]*"', 'android:label="Global Sports Academy"', s, count=1)
+          open(m, 'w').write(s)
+          # white notification glyph (bell) so the status-bar icon always shows
+          os.makedirs('android/app/src/main/res/drawable', exist_ok=True)
+          open('android/app/src/main/res/drawable/ic_notification.xml', 'w').write('''<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFFFF" android:pathData="M12,22c1.1,0 2,-0.9 2,-2h-4c0,1.1 0.9,2 2,2zM18,16v-5c0,-3.07 -1.63,-5.64 -4.5,-6.32V4c0,-0.83 -0.67,-1.5 -1.5,-1.5s-1.5,0.67 -1.5,1.5v0.68C7.64,5.36 6,7.92 6,11v5l-2,2v1h16v-1l-2,-2z"/></vector>''')
+          # launcher icon from the academy logo
+          for d in glob.glob('android/app/src/main/res/mipmap-*'):
+              shutil.copy('assets/icon.png', os.path.join(d, 'ic_launcher.png'))
+          # core library desugaring (needed by flutter_local_notifications)
+          for f in ('android/app/build.gradle.kts', 'android/app/build.gradle'):
+              if not os.path.exists(f): continue
+              g = open(f).read(); kts = f.endswith('.kts')
+              g = g.replace('compileOptions {', 'compileOptions {\n        ' + ('isCoreLibraryDesugaringEnabled = true' if kts else 'coreLibraryDesugaringEnabled true'), 1)
+              g += '\ndependencies {\n    ' + ('coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")' if kts else "coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'") + '\n}\n'
+              open(f, 'w').write(g)
+          PY
+
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings || true
+      - name: Build release APK
+        run: flutter build apk --release --dart-define=API_URL=https://gsa-api.pughalanarulmani.workers.dev
+
+      - name: Rename
+        run: cp build/app/outputs/flutter-apk/app-release.apk GlobalSportsAcademy.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GlobalSportsAcademy-apk
+          path: apps/flutter/GlobalSportsAcademy.apk
+
+      - name: Publish release (direct download link)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: Global Sports Academy app (build ${{ github.run_number }})
+          files: apps/flutter/GlobalSportsAcademy.apk

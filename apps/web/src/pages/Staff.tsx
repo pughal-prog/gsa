@@ -8,6 +8,7 @@ const PERMS: [string, string][] = [
   ['students.view', 'View assigned students'], ['students.viewAll', 'View all students'], ['students.edit', 'Add and edit students'],
   ['attendance.mark', 'Mark attendance'], ['achievements.edit', 'Add achievements, matches, photos'], ['fees.view', 'View fees'],
   ['fees.collect', 'Collect fees and create bills'], ['equipment.view', 'View equipment stock'],
+  ['students.contact', 'See parent phone and address'], ['students.medical', 'See and edit medical info'],
 ]
 
 const staffFields = (sports: any[]): Field[] => [
