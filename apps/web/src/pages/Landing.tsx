@@ -7,7 +7,7 @@ import {
 import { Logo } from '../components/ui'
 import Carousel from '../components/Carousel'
 import ChatWidget from '../components/ChatWidget'
-import { CountUp, Tilt, Magnetic, SplitWords, ScrollProgress, useScrolled } from '../components/fx'
+import { CountUp, Tilt, Magnetic, SplitWords, ScrollProgress, useScrolled, CursorGlow, Parallax, Squiggle } from '../components/fx'
 import { API, useApi, useAuth } from '../lib'
 import { SITE, fullAddress, mapsUrl } from '../site'
 
@@ -125,6 +125,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-white text-ink">
       <ScrollProgress />
+      <CursorGlow />
       {/* announcement bar */}
       <div className="bg-flame text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 px-4 py-2 text-center text-xs font-semibold sm:text-sm">
@@ -160,10 +161,11 @@ export default function Landing() {
       </header>
 
       {/* hero */}
-      <section className="relative overflow-hidden bg-navy text-white">
-        {slides.length > 0 && <Carousel slides={slides} interval={5200} className="absolute inset-0 opacity-30" />}
+      <Parallax className="contents"><section className="grain relative overflow-hidden bg-navy text-white">
+        {slides.length > 0 && <div data-speed="0.12" className="absolute inset-0"><Carousel slides={slides} interval={5200} className="absolute inset-0 opacity-30" /></div>}
         <div className="absolute inset-0 bg-gradient-to-br from-navy via-navy/90 to-navy2/70" />
-        <div className="aurora" />
+        <div data-speed="0.2" className="absolute inset-0"><div className="aurora" /></div>
+        <div className="orb a" /><div className="orb b" /><div className="orb c" />
         <div className="hero-grid absolute inset-0" />
         <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-4 pb-28 pt-14 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:pb-32 lg:pt-20">
           <div>
@@ -179,7 +181,7 @@ export default function Landing() {
             </ul>
           </div>
           {/* trial card */}
-          <div id="trial" className="rounded-2xl bg-white p-6 text-ink shadow-2xl shadow-black/30 sm:p-7">
+          <div id="trial" className="gborder isolate rounded-2xl bg-white p-6 text-ink shadow-2xl shadow-black/30 sm:p-7">
             <div className="label text-flame">Free to ask, quick to answer</div>
             <h2 className="mt-1 text-2xl font-extrabold">Book a trial class</h2>
             <p className="mb-4 mt-1 text-sm text-mute">Leave your number and we will call you back.</p>
@@ -187,7 +189,7 @@ export default function Landing() {
           </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0 z-10 h-1.5 bg-gradient-to-r from-flame via-sky to-leaf" />
-      </section>
+      </section></Parallax>
 
       {/* facts strip overlapping the hero */}
       <div className="relative z-20 mx-auto -mt-10 max-w-6xl px-4 sm:px-8">
@@ -206,6 +208,7 @@ export default function Landing() {
         <Reveal className="mx-auto max-w-2xl text-center">
           <Eyebrow>What we teach</Eyebrow>
           <h2 className="mt-3 text-3xl font-extrabold sm:text-5xl">Five disciplines, one standard</h2>
+          <Squiggle className="mx-auto mt-2" />
           <p className="mt-3 text-mute">Every sport is coached by specialists and tracked in the same system, so progress is visible to the family.</p>
         </Reveal>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

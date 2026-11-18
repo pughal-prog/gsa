@@ -34,7 +34,7 @@ class _StudentsPageState extends State<StudentsPage> {
                 }
                 final r = rows[i - 1];
                 return Reveal(index: i, child: Card(child: ListTile(
-                  leading: CircleAvatar(backgroundColor: brand, child: Text('${r['name']}'.isEmpty ? '?' : '${r['name']}'.substring(0, 1), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))),
+                  leading: Hero(tag: 'stu-${r['id']}', child: initialAvatar('${r['name']}')),
                   title: Text('${r['name']}', style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text('${r['admission_no']} · ${s(r['sports'])}'),
                   trailing: const Icon(Icons.chevron_right),
@@ -47,12 +47,15 @@ class _StudentsPageState extends State<StudentsPage> {
       ]);
 }
 
+/// Round initial used in the list and, via Hero, carried into the student screen.
+Widget initialAvatar(String name) => CircleAvatar(backgroundColor: flame, child: Text(name.isEmpty ? '?' : name.substring(0, 1).toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)));
+
 class StudentScreen extends StatelessWidget {
   final int id;
   final String name;
   const StudentScreen({super.key, required this.id, required this.name});
   @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text(name)), body: StudentView(fetch: () => Api.get('/api/students/$id')));
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Row(children: [Hero(tag: 'stu-$id', child: initialAvatar(name)), const SizedBox(width: 12), Expanded(child: Text(name, overflow: TextOverflow.ellipsis))])), body: StudentView(fetch: () => Api.get('/api/students/$id')));
 }
 
 class PassportPage extends StatelessWidget {

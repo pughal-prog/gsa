@@ -99,3 +99,60 @@ export function useScrolled(px = 24) {
   }, [px])
   return s
 }
+
+/** Soft light that follows the cursor on desktop. Hidden on touch screens. */
+export function CursorGlow() {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (reduced() || !window.matchMedia('(pointer: fine)').matches) return
+    let raf = 0, x = 0, y = 0
+    const on = (e: globalThis.MouseEvent) => {
+      x = e.clientX; y = e.clientY
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (ref.current) ref.current.style.transform = `translate3d(${x - 160}px, ${y - 160}px, 0)` })
+    }
+    window.addEventListener('mousemove', on, { passive: true })
+    return () => window.removeEventListener('mousemove', on)
+  }, [])
+  return <div ref={ref} className="cursor-glow" aria-hidden />
+}
+
+/** Moves its layers at different speeds while scrolling. Put `data-speed` on children (0.1 = slow, 0.4 = fast). */
+export function Parallax({ children, className = '' }: { children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (reduced()) return
+    const el = ref.current
+    if (!el) return
+    const layers = Array.from(el.querySelectorAll<HTMLElement>('[data-speed]'))
+    let raf = 0
+    const on = () => {
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        raf = 0
+        const y = window.scrollY
+        if (y > 1200) return
+        layers.forEach((l) => { l.style.transform = `translate3d(0, ${y * Number(l.dataset.speed)}px, 0)` })
+      })
+    }
+    window.addEventListener('scroll', on, { passive: true })
+    return () => window.removeEventListener('scroll', on)
+  }, [])
+  return <div ref={ref} className={className}>{children}</div>
+}
+
+/** A hand-drawn style underline that draws itself when it scrolls into view. */
+export function Squiggle({ className = '' }: { className?: string }) {
+  const ref = useRef<SVGSVGElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || !('IntersectionObserver' in window)) { el?.classList.add('drawn'); return }
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { el.classList.add('drawn'); io.disconnect() } }, { threshold: 0.6 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  return (
+    <svg ref={ref} viewBox="0 0 200 12" preserveAspectRatio="none" className={`squiggle ${className}`} aria-hidden>
+      <path d="M2 8 C 30 2, 50 12, 80 6 S 130 2, 160 7 S 190 9, 198 4" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" pathLength={1} />
+    </svg>
+  )
+}

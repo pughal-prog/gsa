@@ -108,3 +108,32 @@ input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px
   .word { animation: none; transform: none; } .aurora, .skeleton::after { animation: none; } .page-in, .stagger > *, .pop-in { animation: none; }
   .tilt, .lift, .magnetic { transition: none; }
 }
+
+/* ---------- extra effects ---------- */
+.cursor-glow { position: fixed; top: 0; left: 0; width: 320px; height: 320px; border-radius: 50%; pointer-events: none; z-index: 1; opacity: .5; mix-blend-mode: multiply;
+  background: radial-gradient(circle, rgba(0,160,224,.16), transparent 65%); transition: transform .12s linear; }
+.orb { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(2px); animation: float 9s ease-in-out infinite alternate; }
+.orb.a { width: 120px; height: 120px; left: 46%; top: 72%; background: radial-gradient(circle at 30% 30%, rgba(245,184,46,.9), rgba(245,184,46,0) 70%); }
+.orb.b { width: 180px; height: 180px; right: 42%; top: 8%; background: radial-gradient(circle at 30% 30%, rgba(0,160,224,.8), rgba(0,160,224,0) 70%); animation-duration: 12s; }
+.orb.c { width: 90px; height: 90px; right: 8%; bottom: 14%; background: radial-gradient(circle at 30% 30%, rgba(227,27,35,.75), rgba(227,27,35,0) 70%); animation-duration: 10s; animation-delay: -3s; }
+@keyframes float { from { translate: 0 0; } to { translate: 14px -22px; } }
+
+/* film grain over the hero */
+.grain::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .09; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+
+/* card with a slowly travelling gradient edge */
+@property --ang { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+.gborder { position: relative; border-radius: 1rem; background: #fff; }
+.gborder::before { content: ''; position: absolute; inset: -2px; border-radius: inherit; z-index: -1;
+  background: conic-gradient(from var(--ang), var(--color-flame), var(--color-gold), var(--color-sky), var(--color-flame)); animation: spin-ang 6s linear infinite; }
+/* white face sits above the gradient so only a 2px edge shows */
+.gborder::after { content: ''; position: absolute; inset: 0; border-radius: inherit; z-index: -1; background: #fff; }
+@keyframes spin-ang { to { --ang: 360deg; } }
+
+.squiggle { display: block; width: 8.5rem; height: .7rem; color: var(--color-gold); }
+.squiggle path { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.squiggle.drawn path { animation: draw 1s .15s ease forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion: reduce) { .orb, .gborder::before { animation: none; } .squiggle path { stroke-dashoffset: 0; } .cursor-glow { display: none; } }

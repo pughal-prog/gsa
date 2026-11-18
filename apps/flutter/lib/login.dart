@@ -46,7 +46,13 @@ class _WelcomeState extends State<Welcome> {
               builder: (c, s, _) => Transform.scale(scale: s, child: Image.network(photos[i], fit: BoxFit.cover, width: double.infinity, height: double.infinity, errorBuilder: (_, __, ___) => const SizedBox())),
             ),
           ),
-        Container(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withOpacity(.25), Colors.black.withOpacity(.85)]))),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1), duration: const Duration(seconds: 7), curve: Curves.easeInOut,
+          builder: (c, v, _) => Container(decoration: BoxDecoration(gradient: LinearGradient(
+            begin: Alignment(-1 + v * .6, -1), end: Alignment(1, 1),
+            colors: [const Color(0xFF062B57).withOpacity(.55), Colors.black.withOpacity(.35), Colors.black.withOpacity(.88)],
+            stops: const [0, .45, 1]))),
+        ),
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
