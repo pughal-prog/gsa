@@ -13,7 +13,7 @@ const GoogleG = () => (
 )
 
 type Tab = 'signin' | 'signup'
-const inputCls = 'w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/10'
+const inputCls = 'w-full rounded-md border border-line bg-surface px-4 py-3 text-sm outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/10'
 
 export default function Login({ initial = 'signin' }: { initial?: Tab }) {
   const { me, login } = useAuth()
@@ -81,7 +81,7 @@ export default function Login({ initial = 'signin' }: { initial?: Tab }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <aside className="brand-panel relative hidden flex-col justify-between p-10 text-white lg:flex">
-        <Link to="/" className="inline-block self-start rounded-2xl bg-white p-3 shadow-card"><Logo small className="!h-28" /></Link>
+        <Link to="/" className="inline-block self-start rounded-lg bg-white p-3 shadow-card"><Logo small className="!h-28" /></Link>
         <div>
           <h2 className="text-4xl font-extrabold leading-tight">Everything about every athlete, in one place.</h2>
           <ul className="mt-8 space-y-4 text-white/90">
@@ -96,7 +96,7 @@ export default function Login({ initial = 'signin' }: { initial?: Tab }) {
       <main className="flex items-center justify-center bg-page p-4 sm:p-10">
         <div className="w-full max-w-md rise">
           <Link to="/" className="mb-6 flex justify-center lg:hidden"><Logo small className="!h-24" /></Link>
-          <div className="rounded-3xl border border-line bg-surface p-6 shadow-card sm:p-8">
+          <div className="rounded-lg border border-line bg-surface p-6 shadow-card sm:p-8">
             {done ? (
               <div className="py-6 text-center">
                 <CheckCircle2 className="mx-auto text-leaf" size={52} />
@@ -106,7 +106,7 @@ export default function Login({ initial = 'signin' }: { initial?: Tab }) {
               </div>
             ) : (
               <>
-                <div className="mb-6 grid grid-cols-2 rounded-xl bg-soft p-1" role="tablist">
+                <div className="mb-6 grid grid-cols-2 rounded-md bg-soft p-1" role="tablist">
                   {(['signin', 'signup'] as Tab[]).map((t) => (
                     <button key={t} role="tab" aria-selected={tab === t} onClick={() => { setTab(t); setErr('') }}
                       className={cx('rounded-lg py-2 text-sm font-semibold transition', tab === t ? 'bg-surface text-brand shadow-sm' : 'text-mute hover:text-slate-900')}>{t === 'signin' ? 'Sign in' : 'Sign up'}</button>
@@ -127,7 +127,7 @@ export default function Login({ initial = 'signin' }: { initial?: Tab }) {
                     <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="I am a">
                       {([['student', 'Student / Parent'], ['staff', 'Coach / Staff']] as const).map(([v, l]) => (
                         <button type="button" key={v} role="radio" aria-checked={role === v} onClick={() => setRole(v)}
-                          className={cx('rounded-xl border px-3 py-2.5 text-sm font-semibold transition', role === v ? 'border-brand bg-brand/10 text-brand' : 'border-line text-slate-600 hover:bg-soft')}>{l}</button>
+                          className={cx('rounded-md border px-3 py-2.5 text-sm font-semibold transition', role === v ? 'border-brand bg-brand/10 text-brand' : 'border-line text-slate-600 hover:bg-soft')}>{l}</button>
                       ))}
                     </div>
                     <label className="block"><span className={lab}>{role === 'student' ? "Student's full name" : 'Full name'}</span><input name="name" required className={inputCls} autoComplete="name" /></label>

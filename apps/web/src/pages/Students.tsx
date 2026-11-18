@@ -27,9 +27,9 @@ export default function Students() {
           <div className="relative min-w-60 flex-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-mute" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or admission no." aria-label="Search students"
-              className="w-full rounded-xl border border-line bg-soft py-2 pl-9 pr-3 text-sm outline-none focus:border-brand" />
+              className="w-full rounded-md border border-line bg-soft py-2 pl-9 pr-3 text-sm outline-none focus:border-brand" />
           </div>
-          <select value={sport} onChange={(e) => setSport(e.target.value)} aria-label="Filter by sport" className="rounded-xl border border-line bg-soft px-3 py-2 text-sm">
+          <select value={sport} onChange={(e) => setSport(e.target.value)} aria-label="Filter by sport" className="rounded-md border border-line bg-soft px-3 py-2 text-sm">
             <option value="">All sports</option>
             {sports.data?.sports.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
@@ -52,7 +52,7 @@ export default function Students() {
       {created && (
         <Modal title="Student login created" onClose={() => setCreated(null)}>
           <p className="text-sm text-mute">Share these with the parent now. The password is shown only once and must be changed at first sign-in.</p>
-          <div className="mt-4 rounded-xl bg-soft p-4 font-mono text-sm"><div>User ID: <b className="text-brand">{created.username}</b></div><div>Password: <b className="text-brand">{created.tempPassword}</b></div></div>
+          <div className="mt-4 rounded-md bg-soft p-4 font-mono text-sm"><div>User ID: <b className="text-brand">{created.username}</b></div><div>Password: <b className="text-brand">{created.tempPassword}</b></div></div>
           <div className="mt-4 text-right"><Btn onClick={() => setCreated(null)}>Done</Btn></div>
         </Modal>
       )}

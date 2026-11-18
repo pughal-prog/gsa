@@ -41,7 +41,7 @@ export default function Cameras() {
       {!cams.length ? <Card><Empty text="No cameras yet. Add the live stream link from your CCTV recorder (HLS .m3u8, MJPEG or snapshot URL)." /></Card> : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {cams.map((c) => (
-            <div key={c.id} className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
+            <div key={c.id} className="overflow-hidden rounded-lg border border-line bg-surface shadow-card">
               <div className="aspect-video bg-slate-900"><Feed cam={c} /></div>
               <div className="flex items-center justify-between p-3 text-sm">
                 <div><b>{c.name}</b><div className="text-xs text-mute">{c.location || c.stream_type.toUpperCase()}</div></div>

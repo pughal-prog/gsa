@@ -64,14 +64,14 @@ function Medical({ d, reload }: { d: any; reload: () => void }) {
   const [msg, setMsg] = useState('')
   const set = (k: string, x: any) => setV((o: any) => ({ ...o, [k]: x }))
   const save = async () => { try { await api(`/api/students/${d.student.id}/medical`, { method: 'PUT', body: v }); setMsg('Saved'); reload() } catch (e: any) { setMsg(e.message) } }
-  const inp = 'w-full rounded-xl border border-line bg-soft px-3 py-2 text-sm'
+  const inp = 'w-full rounded-md border border-line bg-soft px-3 py-2 text-sm'
   return (
     <Card>
       <h2 className="mb-1 font-semibold">Medical information</h2>
       <p className="mb-4 text-xs text-mute">Private. Only the owner and the student can see this unless the owner grants a coach access.</p>
       <div className="space-y-4">
         {MED.map(([flag, det, label]) => (
-          <div key={flag} className="rounded-xl border border-line p-3">
+          <div key={flag} className="rounded-md border border-line p-3">
             <label className="flex items-center gap-3 text-sm font-medium"><input type="checkbox" disabled={!canEdit} checked={!!v[flag]} onChange={(e) => set(flag, e.target.checked ? 1 : 0)} className="h-4 w-4" /> {label}</label>
             {!!v[flag] && <textarea disabled={!canEdit} rows={2} placeholder="Details (name, since when, which bone, etc.)" value={v[det] ?? ''} onChange={(e) => set(det, e.target.value)} className={`${inp} mt-2`} />}
           </div>
@@ -105,10 +105,10 @@ function StudentView({ d, reload }: { d: any; reload: () => void }) {
   return (
     <>
       {/* Athlete Passport header */}
-      <div className="brand-panel relative mb-6 overflow-hidden rounded-3xl p-6 text-white shadow-card">
+      <div className="brand-panel relative mb-6 overflow-hidden rounded-lg p-6 text-white shadow-card">
         <div className="stripe absolute inset-x-0 top-0 h-1.5" />
         <div className="relative flex flex-wrap items-center gap-6">
-          <AuthImg k={s.photo_key} alt={`Photo of ${s.name}`} className="h-28 w-28 rounded-2xl border-4 border-white/30 !bg-white/15 !text-white/70" />
+          <AuthImg k={s.photo_key} alt={`Photo of ${s.name}`} className="h-28 w-28 rounded-lg border-4 border-white/30 !bg-white/15 !text-white/70" />
           <div className="min-w-0 flex-1">
             <div className="text-xs font-semibold uppercase tracking-widest text-white/70">Athlete passport · {s.admission_no}</div>
             <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">{s.name}</h1>
@@ -224,7 +224,7 @@ function StudentView({ d, reload }: { d: any; reload: () => void }) {
       {tab === 'Photos' && <Photos d={d} reload={reload} canUpload={addAch} />}
 
       {me?.role === 'owner' && (
-        <div className="mt-10 rounded-2xl border border-danger/30 bg-danger/5 p-5">
+        <div className="mt-10 rounded-lg border border-danger/30 bg-danger/5 p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div><h2 className="font-semibold text-danger">Delete student</h2>
               <p className="text-sm text-mute">Permanently removes this student, their login, attendance, fees, photos and notifications. Income and equipment history stays but is unlinked. This cannot be undone.</p></div>
@@ -256,7 +256,7 @@ function StudentView({ d, reload }: { d: any; reload: () => void }) {
 }
 
 const AchCard = ({ a }: { a: any }) => (
-  <div className="rounded-xl border border-line bg-soft p-4">
+  <div className="rounded-md border border-line bg-soft p-4">
     <div className="flex items-center justify-between"><span className="text-sm font-semibold text-brand">{a.position || 'Participant'}</span>{a.level && <Badge tone="stored">{a.level}</Badge>}</div>
     <div className="mt-1 text-sm">{a.title}</div>
     <div className="mt-1 text-xs text-mute">{a.sport} · {fdate(a.event_date)}</div>
@@ -281,10 +281,10 @@ function Photos({ d, reload, canUpload }: { d: any; reload: () => void; canUploa
     <div className="space-y-4">
       {canUpload && (
         <Card className="flex flex-wrap items-center gap-3">
-          <select value={kind} onChange={(e) => setKind(e.target.value)} aria-label="Photo type" className="rounded-xl border border-line bg-soft px-3 py-2 text-sm">
+          <select value={kind} onChange={(e) => setKind(e.target.value)} aria-label="Photo type" className="rounded-md border border-line bg-soft px-3 py-2 text-sm">
             {groups.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
-          <label className={cx('inline-flex cursor-pointer items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white', busy && 'opacity-50')}>
+          <label className={cx('inline-flex cursor-pointer items-center gap-2 rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white', busy && 'opacity-50')}>
             <Upload size={16} /> {busy ? 'Uploading...' : 'Upload photo'}
             <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => upload(e.target.files?.[0])} />
           </label>
@@ -296,7 +296,7 @@ function Photos({ d, reload, canUpload }: { d: any; reload: () => void; canUploa
         const items = d.media.filter((m: any) => m.kind === k)
         return items.length ? (
           <Card key={k}><h2 className="mb-3 font-semibold">{label}</h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{items.map((m: any) => <AuthImg key={m.id} k={m.r2_key} alt={m.caption || label} className="aspect-square w-full rounded-xl" />)}</div></Card>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{items.map((m: any) => <AuthImg key={m.id} k={m.r2_key} alt={m.caption || label} className="aspect-square w-full rounded-md" />)}</div></Card>
         ) : null
       })}
       {!d.media.length && <Empty text="No photos yet" />}

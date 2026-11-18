@@ -1,14 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-display: "Sora", "DM Sans", sans-serif;
   /* Palette taken from the academy logo: blue, red, green, sky */
-  --color-page: #f3f6fb;
+  --color-page: #f6f4ef;
+  --color-ink: #0b1220;
+  --color-ink2: #151f35;
   --color-surface: #ffffff;
-  --color-soft: #eef2f9;
-  --color-softer: #e3e9f4;
-  --color-line: #dde4f0;
+  --color-soft: #efece4;
+  --color-softer: #e4e0d5;
+  --color-line: #ddd8cb;
   --color-brand: #0b4aa2;
   --color-brand-dark: #08357a;
   --color-flame: #e31b23;
@@ -19,16 +21,17 @@
   --color-warn: #c77700;
 }
 
-html { background: var(--color-page); color: #0f1b33; }
+html { background: var(--color-page); color: #0b1220; }
 body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
-h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.015em; }
+h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.025em; }
 ::selection { background: var(--color-brand); color: #fff; }
 * { scrollbar-width: thin; scrollbar-color: #b9c5dc transparent; }
 
-.hero-bg { background: linear-gradient(180deg, #ffffff, #f3f6fb); }
-.brand-panel { background: #0b4aa2; }
+.hero-bg { background: var(--color-ink); }
+.brand-panel { background: var(--color-ink); }
 .stripe { background: linear-gradient(90deg, var(--color-flame) 0 33%, var(--color-brand) 33% 66%, var(--color-leaf) 66%); }
-.shadow-card { box-shadow: 0 1px 2px rgba(16,24,40,.05), 0 10px 28px -14px rgba(16,36,80,.18); }
+.shadow-card { box-shadow: none; }
+.label { font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; }
 @media (prefers-reduced-motion: no-preference) {
   .rise { animation: rise .45s ease both; }
   @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

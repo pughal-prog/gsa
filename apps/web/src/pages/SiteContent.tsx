@@ -40,7 +40,7 @@ function Gallery() {
           <select value={sport} onChange={(e) => setSport(e.target.value)} className="rounded-lg border border-line bg-surface px-3 py-2 text-sm"><option value="">General</option>{sports.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
         <label className="min-w-48 flex-1 text-sm"><span className="mb-1 block text-xs text-mute">Caption (optional)</span>
           <input value={caption} onChange={(e) => setCaption(e.target.value)} className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm" /></label>
-        <label className={cx('inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-brand px-4 py-2 text-sm font-semibold text-white', busy && 'opacity-50')}>
+        <label className={cx('inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white', busy && 'opacity-50')}>
           <Upload size={16} /> {busy ? 'Uploading...' : 'Upload photos'}<input type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => upload(e.target.files)} /></label>
         {err && <ErrorMsg text={err} />}
       </Card>

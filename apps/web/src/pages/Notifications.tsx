@@ -17,7 +17,7 @@ export default function Notifications() {
     <>
       <PageHeader title="Notifications" sub={me?.role === 'student' ? 'Alerts sent to your parent / guardian' : 'Everything sent to parents: check-ins, late, absence, fees'}
         action={<div className="flex gap-2"><Btn variant="ghost" onClick={() => exportPdf({ title: 'Notifications', head: ['When', 'Student', 'Message'], rows: rows.map((n) => [fdate(n.created_at), n.student || 'All', `${n.title}: ${n.body}`]), filename: 'notifications.pdf' })}><FileDown size={16} /> PDF</Btn>{me?.role === 'owner' && <Btn onClick={() => setOpen(true)}><Megaphone size={16} /> Announce</Btn>}</div>} />
-      {sent && <div className="mb-4 rounded-xl bg-brand/10 p-3 text-sm text-brand">{sent}</div>}
+      {sent && <div className="mb-4 rounded-md bg-brand/10 p-3 text-sm text-brand">{sent}</div>}
       <Card>
         {me?.role === 'student' ? (
           rows.length ? rows.map((n) => <div key={n.id} className="border-b border-line/60 py-3 last:border-0"><div className="flex justify-between"><b className="text-sm">{n.title}</b><span className="text-xs text-mute">{fdate(n.created_at)}</span></div><div className="text-sm text-slate-600">{n.body}</div></div>) : <Empty text="No notifications yet" />

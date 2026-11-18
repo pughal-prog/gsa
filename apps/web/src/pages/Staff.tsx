@@ -43,7 +43,7 @@ export default function Staff() {
       {created && (
         <Modal title="Staff login created" onClose={() => setCreated(null)}>
           <p className="text-sm text-mute">Share these now. The password is shown once. New staff start with basic access; adjust it on their profile.</p>
-          <div className="mt-4 rounded-xl bg-soft p-4 font-mono text-sm"><div>User ID: <b className="text-brand">{created.username}</b></div><div>Password: <b className="text-brand">{created.tempPassword}</b></div></div>
+          <div className="mt-4 rounded-md bg-soft p-4 font-mono text-sm"><div>User ID: <b className="text-brand">{created.username}</b></div><div>Password: <b className="text-brand">{created.tempPassword}</b></div></div>
           <div className="mt-4 text-right"><Btn onClick={() => setCreated(null)}>Done</Btn></div>
         </Modal>
       )}
@@ -119,7 +119,7 @@ function PermsModal({ staff, onClose, onSaved }: { staff: any; onClose: () => vo
       <p className="mb-3 text-sm text-mute">The owner always has full control. Tick only what this person needs.</p>
       <div className="space-y-2">
         {PERMS.map(([k, l]) => (
-          <label key={k} className="flex cursor-pointer items-center gap-3 rounded-xl bg-soft px-3 py-2.5 text-sm">
+          <label key={k} className="flex cursor-pointer items-center gap-3 rounded-md bg-soft px-3 py-2.5 text-sm">
             <input type="checkbox" className="h-4 w-4 accent-[#0b4aa2]" checked={sel.includes(k)} onChange={(e) => setSel(e.target.checked ? [...sel, k] : sel.filter((x) => x !== k))} />{l}
           </label>
         ))}
