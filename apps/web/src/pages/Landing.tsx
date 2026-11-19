@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState, FormEvent, ReactNode } from 'react'
+import { useEffect, useRef, useState, FormEvent, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight, MapPin, Phone, MessageCircle, ImageOff, X, ArrowUpRight, Swords, Dices, Crown, Dumbbell, CircleDot,
@@ -9,7 +9,7 @@ import Carousel from '../components/Carousel'
 import ChatWidget from '../components/ChatWidget'
 import { CountUp, Tilt, Magnetic, SplitWords, ScrollProgress, useScrolled, CursorGlow, Squiggle } from '../components/fx'
 import { CourtArt, CourtKind } from '../components/court'
-const Hero3D = lazy(() => import('../components/Hero3D'))
+import SportStage from '../components/stage'
 import { API, useApi, useAuth } from '../lib'
 import { SITE, fullAddress, mapsUrl } from '../site'
 
@@ -107,17 +107,6 @@ function TrialForm({ compact, bar, sportList }: { compact?: boolean; bar?: boole
 
 
 const courtOf: CourtKind[] = ['fencing', 'table', 'carrom', 'chess', 'fitness']
-
-/** Hero panel backdrop: the playing surface of each sport draws itself in turn. */
-function HeroCourt() {
-  const [i, setI] = useState(0)
-  useEffect(() => { const t = setInterval(() => setI((x) => (x + 1) % courtOf.length), 5200); return () => clearInterval(t) }, [])
-  return (
-    <div className="pointer-events-none absolute inset-0 grid place-items-center p-6" aria-hidden>
-      <div key={i} className="w-full"><CourtArt kind={courtOf[i]} /></div>
-    </div>
-  )
-}
 
 /** Desktop: the section pins to the screen and scrolling walks through the five sports, each with its own court. */
 function PinnedSports({ photos }: { photos: any[] }) {
@@ -248,13 +237,8 @@ export default function Landing() {
               {['Certified coaches', 'All age categories', 'Parent app with live alerts'].map((x) => <li key={x} className="flex items-center gap-2"><CheckCircle2 size={16} className="text-leaf" />{x}</li>)}
             </ul>
           </div>
-          <div className="panel-arena relative h-[360px] overflow-hidden rounded-[2rem] shadow-2xl shadow-brand/30 sm:h-[440px] lg:h-[540px]">
-            <div className="absolute inset-0 opacity-40" aria-hidden><HeroCourt /></div>
-            <Suspense fallback={null}><Hero3D className="absolute inset-0 z-[2]" /></Suspense>
-            <div className="absolute bottom-4 left-4 z-[3] flex gap-2 text-xs font-bold">
-              <span className="rounded-full bg-gold px-3 py-1.5 text-ink">5 sports</span>
-              <span className="rounded-full bg-white/15 px-3 py-1.5 text-white backdrop-blur">4 age groups</span>
-            </div>
+          <div className="panel-arena relative h-[430px] overflow-hidden rounded-[2rem] shadow-2xl shadow-brand/30 sm:h-[480px] lg:h-[540px]">
+            <SportStage className="absolute inset-0 z-[2]" />
           </div>
         </div>
         {/* booking bar */}
@@ -410,7 +394,7 @@ export default function Landing() {
       </section>
 
       {/* sport marquee */}
-      <div className="overflow-hidden bg-deep py-8" aria-hidden>
+      <div className="overflow-hidden bg-brand py-8" aria-hidden>
         <div className="marquee flex w-max gap-12 whitespace-nowrap font-display text-6xl font-extrabold sm:text-8xl">
           {[...sports, ...sports, ...sports].map((s, i) => <span key={i} className="flex items-center gap-12"><span className="outline-word">{s.name}</span><span className="text-flame">/</span></span>)}
         </div>
@@ -482,20 +466,20 @@ export default function Landing() {
       </section>
 
       {/* closing CTA with full form + contact */}
-      <section id="contact" className="relative overflow-hidden bg-navy text-white">
-        <div className="hero-grid absolute inset-0" />
-        <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-8 lg:grid-cols-2">
-          <div>
-            <Eyebrow light>Contact</Eyebrow>
+      <section id="contact" className="bg-page px-4 py-16 sm:px-8 sm:py-24">
+        <div className="panel-arena relative mx-auto grid max-w-7xl gap-12 overflow-hidden rounded-[2rem] p-6 text-white shadow-2xl shadow-brand/30 sm:p-14 lg:grid-cols-2">
+          <div className="pointer-events-none absolute -bottom-16 -right-24 w-[560px] opacity-20" aria-hidden><CourtArt kind="table" /></div>
+          <div className="relative z-10">
+            <div className="label text-gold">Contact</div>
             <h2 className="mt-3 text-3xl font-extrabold sm:text-5xl">Start your journey with us</h2>
             <p className="mt-3 max-w-md text-white/75">Visit the academy, call, or send a message. We reply quickly.</p>
             <div className="mt-8 space-y-3">
-              <a href={`tel:+${SITE.phoneIntl}`} className="group flex items-center gap-4 rounded-xl bg-white/10 p-4 transition hover:bg-white/15"><span className="grid h-11 w-11 place-items-center rounded-lg bg-sky text-white"><Phone size={20} /></span><div className="flex-1"><div className="label text-white/60">Call us</div><div className="text-lg font-bold">{SITE.phone}</div></div><ArrowUpRight size={18} className="opacity-0 transition group-hover:opacity-100" /></a>
+              <a href={`tel:+${SITE.phoneIntl}`} className="group flex items-center gap-4 rounded-xl bg-white/10 p-4 transition hover:bg-white/15"><span className="grid h-11 w-11 place-items-center rounded-lg bg-gold text-ink"><Phone size={20} /></span><div className="flex-1"><div className="label text-white/60">Call us</div><div className="text-lg font-bold">{SITE.phone}</div></div><ArrowUpRight size={18} className="opacity-0 transition group-hover:opacity-100" /></a>
               <a href={`https://wa.me/${SITE.phoneIntl}`} target="_blank" rel="noreferrer" className="group flex items-center gap-4 rounded-xl bg-white/10 p-4 transition hover:bg-white/15"><span className="grid h-11 w-11 place-items-center rounded-lg bg-leaf text-white"><MessageCircle size={20} /></span><div className="flex-1"><div className="label text-white/60">WhatsApp</div><div className="text-lg font-bold">Chat with us</div></div><ArrowUpRight size={18} className="opacity-0 transition group-hover:opacity-100" /></a>
               <a href={mapsUrl()} target="_blank" rel="noreferrer" className="group flex items-center gap-4 rounded-xl bg-white/10 p-4 transition hover:bg-white/15"><span className="grid h-11 w-11 place-items-center rounded-lg bg-flame text-white"><MapPin size={20} /></span><div className="flex-1"><div className="label text-white/60">Find us</div><div className="font-bold leading-snug">{fullAddress()}</div></div><ArrowUpRight size={18} className="opacity-0 transition group-hover:opacity-100" /></a>
             </div>
           </div>
-          <div className="rounded-2xl bg-white p-6 text-ink sm:p-8">
+          <div className="relative z-10 rounded-2xl bg-white p-6 text-ink sm:p-8">
             <h3 className="text-2xl font-extrabold">Send an enquiry</h3>
             <p className="mb-5 mt-1 text-sm text-mute">Tell us a little and we will get back to you.</p>
             <TrialForm sportList={sportList} />
