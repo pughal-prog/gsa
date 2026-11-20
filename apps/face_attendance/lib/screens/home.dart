@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../native.dart';
 import '../state.dart';
 import '../theme.dart';
 import 'admin.dart';
@@ -81,6 +82,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     ]),
                   ),
                 ),
+                if (!s.engineReady) ...[
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.folder_open),
+                    label: const Text('Import models from a folder'),
+                    onPressed: () async {
+                      final r = await Native.pickModels();
+                      if (!context.mounted || r['message'] == 'cancelled') return;
+                      if (r['ok'] == true) {
+                        await showDialog(context: context, barrierDismissible: false, builder: (_) => AlertDialog(
+                          title: const Text('Models copied'), content: const Text('The app will restart now and install them.'),
+                          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Restart'))]));
+                        await Native.restartApp();
+                      } else {
+                        await showDialog(context: context, builder: (_) => AlertDialog(title: const Text('Could not import'), content: Text('${r['message']}'),
+                          actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))]));
+                      }
+                    }),
+                  if (s.engineNote.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text(s.engineNote, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: Colors.black45))),
+                ],
                 const SizedBox(height: 14),
                 SegmentedButton<String>(
                   segments: const [ButtonSegment(value: 'rear', icon: Icon(Icons.flashlight_on_outlined), label: Text('Rear + torch')), ButtonSegment(value: 'front', icon: Icon(Icons.screenshot_outlined), label: Text('Front + white screen'))],

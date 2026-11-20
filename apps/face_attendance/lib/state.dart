@@ -14,6 +14,7 @@ class AppState extends ChangeNotifier {
   String deviceName = '';
   int deviceId = 0;
   String mode = 'ENTRY'; // ENTRY or EXIT, set by an administrator
+  String engineNote = '';
   String camera = 'rear'; // rear or front, remembered
   int cooldown = 600;
   Map<String, dynamic> roster = {}; // studentId -> {name, admission_no}
@@ -57,7 +58,7 @@ class AppState extends ChangeNotifier {
       try {
         final p = await Native.engineProgress();
         if (p['phase'] == 'import') { engineMessage = 'Installing models from the phone folder ${p['percent'] ?? 0}%'; notifyListeners(); }
-        if (p['phase'] == 'models') { engineMessage = 'Downloading face models ${p['percent'] ?? 0}%\n${p['note'] ?? ''}'; notifyListeners(); }
+        if (p['phase'] == 'models') { engineMessage = 'Downloading face models ${p['percent'] ?? 0}%'; engineNote = '${p['note'] ?? ''}'; notifyListeners(); }
       } catch (_) {}
     });
     try {

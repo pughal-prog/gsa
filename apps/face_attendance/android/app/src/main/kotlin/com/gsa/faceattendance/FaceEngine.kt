@@ -142,7 +142,10 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
      */
     private fun importLocalModels() {
         val ext = ctx.getExternalFilesDir(null)
-        val src = File(ext ?: return, "models-import")
+        var src = File(ext ?: ctx.filesDir, "models-import")
+        // files copied in by the in-app folder picker are inside the app's own storage and always readable
+        val staged = File(ctx.filesDir, "models-staged")
+        if (!File(src, "authorize.json").isFile && File(staged, "authorize.json").isFile) src = staged
         val auth = File(src, "authorize.json")
         importNote = "import folder ${src.absolutePath}: dir=${src.isDirectory} canRead=${src.canRead()} files=${src.list()?.size ?: -1} authorize.json=${auth.isFile}/${auth.canRead()}"
         Log.i("GsaFace", importNote)

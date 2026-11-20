@@ -11,6 +11,10 @@ class Native {
   static Future<List<dynamic>> _list(String m, [Map<String, dynamic>? a]) async =>
       jsonDecode((await _ch.invokeMethod<String>(m, a)) ?? '[]') as List<dynamic>;
 
+  /// Opens the folder picker and copies the model files from the chosen folder into the app. Returns {ok, files|message}.
+  static Future<Map<String, dynamic>> pickModels() => _obj('pickModels');
+  static Future<void> restartApp() => _ch.invokeMethod('restartApp');
+
   /// Feedback sound: entry, exit, duplicate or wrong. Never throws, a sound must not affect attendance.
   static Future<void> playSound(String name) async { try { await _ch.invokeMethod('playSound', {'name': name}); } catch (_) {} }
 

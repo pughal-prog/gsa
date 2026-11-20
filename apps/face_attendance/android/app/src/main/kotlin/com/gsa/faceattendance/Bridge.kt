@@ -1,6 +1,10 @@
 package com.gsa.faceattendance
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import android.provider.DocumentsContract
+import java.io.File
 import android.os.Handler
 import android.os.Looper
 import android.view.WindowManager
@@ -35,6 +39,17 @@ class Bridge(private val activity: Activity, private val store: Store) : MethodC
         when (call.method) {
             "setBrightness" -> { val v = (call.argument<Double>("value") ?: -1.0).toFloat(); activity.window.attributes = activity.window.attributes.also { it.screenBrightness = v }; result.success(null); return }
             "keepScreenOn" -> { if (call.argument<Boolean>("on") == true) activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); result.success(null); return }
+            "pickModels" -> {   // folder picker (works on every Android version, no storage permission needed)
+                pendingPick?.success(JSONObject().put("ok", false).put("message", "cancelled").toString())
+                pendingPick = result
+                activity.startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQ_PICK_MODELS); return
+            }
+            "restartApp" -> {
+                val i = activity.packageManager.getLaunchIntentForPackage(activity.packageName)?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                if (i != null) activity.startActivity(i)
+                result.success(null)
+                main.postDelayed({ android.os.Process.killProcess(android.os.Process.myPid()) }, 500); return
+            }
             "playSound" -> { Sound.play(call.argument<String>("name") ?: ""); result.success(null); return }
             "engineProgress" -> { result.success(engine.progress.toString()); return } // must not wait behind a running model download
         }
@@ -46,6 +61,44 @@ class Bridge(private val activity: Activity, private val store: Store) : MethodC
                 main.post { result.error("native", e.message ?: e.javaClass.simpleName, e.javaClass.simpleName) }
             }
         }
+    }
+
+    private var pendingPick: MethodChannel.Result? = null
+    private val REQ_PICK_MODELS = 7311
+
+    /** Result of the folder picker: copies the model files from the chosen folder into the app, then reports back. */
+    fun onPicked(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        if (requestCode != REQ_PICK_MODELS) return false
+        val res = pendingPick ?: return true
+        pendingPick = null
+        val uri = data?.data
+        if (resultCode != Activity.RESULT_OK || uri == null) { res.success(JSONObject().put("ok", false).put("message", "cancelled").toString()); return true }
+        ioWorker.execute {
+            val out = try { JSONObject().put("ok", true).put("files", copyPickedModels(uri)) }
+            catch (e: Throwable) { JSONObject().put("ok", false).put("message", e.message ?: e.javaClass.simpleName) }
+            main.post { res.success(out.toString()) }
+        }
+        return true
+    }
+
+    private fun copyPickedModels(tree: Uri): Int {
+        val ctx = activity.applicationContext
+        val staged = File(ctx.filesDir, "models-staged").apply { deleteRecursively(); mkdirs() }
+        val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+        var n = 0
+        ctx.contentResolver.query(children, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE), null, null, null)?.use { c ->
+            while (c.moveToNext()) {
+                val name = c.getString(1) ?: continue
+                if (c.getString(2) == DocumentsContract.Document.MIME_TYPE_DIR) continue
+                if (name != "authorize.json" && !name.endsWith(".csta")) continue
+                require(name.matches(Regex("[A-Za-z0-9_.-]+"))) { "Unexpected file name $name" }
+                val doc = DocumentsContract.buildDocumentUriUsingTree(tree, c.getString(0))
+                ctx.contentResolver.openInputStream(doc)?.use { inp -> File(staged, name).outputStream().use { out -> inp.copyTo(out) } } ?: throw IllegalStateException("Could not read $name")
+                n++
+            }
+        }
+        if (!File(staged, "authorize.json").isFile) { staged.deleteRecursively(); throw IllegalStateException("authorize.json is not in that folder. Choose the folder that holds the model files.") }
+        return n
     }
 
     private fun str(c: MethodCall, k: String): String = c.argument<String>(k) ?: throw IllegalArgumentException("missing $k")
