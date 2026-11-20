@@ -82,7 +82,7 @@ class AppState extends ChangeNotifier {
     await Native.kvPut('device_name', deviceName);
     paired = true;
     notifyListeners();
-    await sync();
+    sync(); // in the background: pairing is finished, do not make the pair screen wait for the first sync
   }
 
   Future<void> unpair() async {

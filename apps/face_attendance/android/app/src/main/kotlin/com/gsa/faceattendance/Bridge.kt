@@ -21,7 +21,12 @@ import javax.crypto.spec.PBEKeySpec
  */
 class Bridge(private val activity: Activity, private val store: Store) : MethodChannel.MethodCallHandler {
     private val engine = FaceEngine(activity.applicationContext, store)
-    private val worker = Executors.newSingleThreadExecutor()
+    // The face engine is not thread safe and its first start (model download or install) can take minutes, so it gets
+    // its own thread. Everything else (pairing token, queue, PIN, settings) runs on a second thread and never waits for it.
+    private val engineWorker = Executors.newSingleThreadExecutor()
+    private val ioWorker = Executors.newSingleThreadExecutor()
+    private val engineMethods = setOf("engineInit", "engineStatus", "scanBegin", "scanFrame", "enrolBegin", "enrolFrame", "enrolCommit",
+        "enrolCancel", "deleteStudents", "eraseAllFaces", "getConfig", "setConfig", "setCalibrationLabel", "calibrationCsv", "clearCalibration")
     private val main = Handler(Looper.getMainLooper())
     private val rnd = SecureRandom()
 
@@ -32,7 +37,7 @@ class Bridge(private val activity: Activity, private val store: Store) : MethodC
             "keepScreenOn" -> { if (call.argument<Boolean>("on") == true) activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); result.success(null); return }
             "engineProgress" -> { result.success(engine.progress.toString()); return } // must not wait behind a running model download
         }
-        worker.execute {
+        (if (call.method in engineMethods) engineWorker else ioWorker).execute {
             try {
                 val r = handle(call)
                 main.post { result.success(r) }
