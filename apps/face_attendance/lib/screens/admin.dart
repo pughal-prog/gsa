@@ -207,16 +207,16 @@ class EnrolCapture extends StatefulWidget {
 }
 
 class _EnrolCaptureState extends State<EnrolCapture> {
-  final cam = CamSession(); String hint = 'Starting camera'; int count = 0; int needed = 3; bool running = true; String? err; int? lastMs;
+  final cam = CamSession(); String hint = 'Starting camera'; int count = 0; int needed = 3; bool running = true; String? err; int? lastMs; String? camNow; String? flipTo;
 
   @override
-  void initState() { super.initState(); _run(); }
+  void initState() { super.initState(); camNow = widget.s.camera; _run(); }
 
   Future<void> _run() async {
     try {
       if (!widget.s.engineReady) throw 'Face engine not ready';
       needed = (await Native.getConfig())['enrolFrames'] as int? ?? 3;
-      await cam.open(widget.s.camera);
+      await cam.open(camNow!);
       if (mounted) setState(() {});
       await Native.enrolBegin(widget.student['id'].toString());
       setState(() => hint = 'Look at the camera');
@@ -225,6 +225,13 @@ class _EnrolCaptureState extends State<EnrolCapture> {
       Future<String?> next = cam.snap();
       try {
         while (running && mounted && count < needed && DateTime.now().isBefore(end)) {
+          if (flipTo != null) {   // operator pressed the camera switch: close this camera and open the other one
+            final w = flipTo!; flipTo = null;
+            CamSession.discard(await next); await cam.close();
+            try { await cam.open(w); camNow = w; } catch (_) { await cam.open(camNow!); }
+            if (mounted) setState(() {});
+            next = cam.snap(); continue;
+          }
           final p = await next;
           if (p == null) { await Future.delayed(const Duration(milliseconds: 100)); next = cam.snap(); continue; }
           next = cam.snap();
@@ -274,7 +281,9 @@ class _EnrolCaptureState extends State<EnrolCapture> {
     final pct = needed == 0 ? 0 : (count * 100 / needed).round().clamp(0, 100);
     final showCam = cam.ctl != null && cam.ctl!.value.isInitialized && cam.ctl!.value.previewSize != null && err == null;
     return Scaffold(
-      appBar: AppBar(title: Text('Enrol ${widget.student['name']}')),
+      appBar: AppBar(title: Text('Enrol ${widget.student['name']}'), actions: [
+        if (err == null) IconButton(tooltip: 'Switch camera', icon: const Icon(Icons.cameraswitch), onPressed: () => flipTo = camNow == 'front' ? 'rear' : 'front'),
+      ]),
       body: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
         Expanded(child: Center(child: showCam
             ? ClipRRect(borderRadius: BorderRadius.circular(18), child: AspectRatio(aspectRatio: 3 / 4, child: FittedBox(fit: BoxFit.cover, clipBehavior: Clip.hardEdge,

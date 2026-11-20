@@ -25,17 +25,17 @@ class _ScanScreenState extends State<ScanScreen> {
   final cam = CamSession();
   String hint = 'Starting camera';
   bool done = false; bool ready = false;
-  String? err;
+  String? err; String? camNow; String? flipTo; String detail = '';
   DateTime _lastWrong = DateTime.fromMillisecondsSinceEpoch(0);
 
   @override
-  void initState() { super.initState(); _run(); }
+  void initState() { super.initState(); camNow = widget.s.camera; _run(); }
 
   Future<void> _run() async {
     final s = widget.s;
     try {
       if (!s.engineReady) { await s.initEngine(); if (!s.engineReady) throw 'Face engine not ready. Connect to Wi-Fi once to download the models.'; }
-      await cam.open(s.camera);
+      await cam.open(camNow!);
       if (!mounted) return;
       setState(() { ready = true; hint = 'Look at the camera'; });
       await Native.scanBegin();
@@ -44,6 +44,13 @@ class _ScanScreenState extends State<ScanScreen> {
       Future<String?> next = cam.snap();
       try {
       while (!done && mounted && DateTime.now().isBefore(end)) {
+        if (flipTo != null) {   // operator pressed the camera switch (this scan only, the saved camera setting is unchanged)
+          final w = flipTo!; flipTo = null;
+          CamSession.discard(await next); await cam.close();
+          try { await cam.open(w); camNow = w; } catch (_) { await cam.open(camNow!); }
+          if (mounted) setState(() {});
+          next = cam.snap(); continue;
+        }
         final path = await next;
         if (path == null) { await Future.delayed(const Duration(milliseconds: 100)); next = cam.snap(); continue; }
         next = cam.snap();
@@ -58,6 +65,8 @@ class _ScanScreenState extends State<ScanScreen> {
           Native.playSound('wrong');
         }
         setState(() {
+          final sc = r['score'], sd = r['second'], ms = r['ms'], px = r['face_px'];
+          detail = [if (sc is num) 'match ${sc.toStringAsFixed(2)}', if (sd is num && sd > 0) 'next ${sd.toStringAsFixed(2)}', if (px is num && px > 0) 'face ${px}px', if (ms is num) '${ms}ms'].join('  ·  ');
           hint = st == 'pending' ? 'Hold still' : st == 'no_face' ? 'Look at the camera' : st == 'unknown' ? 'Not recognised' :
               st == 'ambiguous' ? 'Cannot be sure, try again' : st == 'spoof' ? 'Live face required' : (_hints[r['reason']] ?? 'Adjust position');
           if (r['reason'] == 'spoof' || r['reason'] == 'liveness_unclear') {
@@ -90,7 +99,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final front = widget.s.camera == 'front';
+    final front = camNow == 'front';
     return Scaffold(
       backgroundColor: front ? Colors.white : Colors.black,
       body: SafeArea(
@@ -112,8 +121,15 @@ class _ScanScreenState extends State<ScanScreen> {
                 Positioned(left: 16, right: 16, bottom: 110, child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
                   decoration: BoxDecoration(color: C.ink.withOpacity(.88), borderRadius: BorderRadius.circular(14)),
-                  child: Text(hint, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700)),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Text(hint, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700)),
+                    if (detail.isNotEmpty) Text(detail, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                  ]),
                 )),
+                Positioned(top: 8, right: 8, child: IconButton.filled(
+                  tooltip: 'Switch camera', icon: const Icon(Icons.cameraswitch),
+                  style: IconButton.styleFrom(backgroundColor: Colors.black54, foregroundColor: Colors.white),
+                  onPressed: () => flipTo = camNow == 'front' ? 'rear' : 'front')),
                 Positioned(left: 16, right: 16, bottom: 24, child: OutlinedButton(
                   onPressed: () => _finish({'status': 'cancelled'}),
                   style: OutlinedButton.styleFrom(minimumSize: const Size(0, 52), backgroundColor: Colors.white),
