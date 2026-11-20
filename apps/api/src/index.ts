@@ -8,6 +8,7 @@ import { money, razorpayWebhook } from './routes/money'
 import { ops, device } from './routes/ops'
 import { publicApi, siteApi } from './routes/site'
 import { approvals } from './routes/extra'
+import { faceDevice, faceAdmin } from './routes/face'
 import { publicChat, ownerChat } from './routes/chat'
 import { markAbsentees, sendFeeReminders } from './notify'
 
@@ -26,6 +27,7 @@ app.route('/auth', approvals)
 app.route('/auth', auth)
 app.route('/webhooks/razorpay', razorpayWebhook)
 app.route('/device', device)
+app.route('/device/face', faceDevice)
 app.route('/public', publicApi)
 app.route('/public', publicChat)
 
@@ -36,6 +38,7 @@ app.route('/api', money)
 app.route('/api', ops)
 app.route('/api', siteApi)
 app.route('/api', ownerChat)
+app.route('/api/face', faceAdmin)
 
 app.onError((e, c) => {
   console.error(e)

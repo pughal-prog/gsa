@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, UserCog, Wallet, Receipt, Boxes, CalendarCheck, Bell, LifeBuoy, LogOut, Menu, X, IdCard, UserCheck, KeyRound, Images, Inbox } from 'lucide-react'
+import { LayoutDashboard, Users, UserCog, Wallet, Receipt, Boxes, CalendarCheck, Bell, LifeBuoy, LogOut, Menu, X, IdCard, UserCheck, KeyRound, Images, Inbox, ScanFace } from 'lucide-react'
 import { useAuth, useApi, can, cx, Role } from './lib'
 import { Logo, Loading } from './components/ui'
 import Landing from './pages/Landing'
@@ -20,6 +20,7 @@ import ChangePassword from './pages/ChangePassword'
 import Approvals from './pages/Approvals'
 import SiteContent from './pages/SiteContent'
 import Enquiries from './pages/Enquiries'
+import FaceAttendance from './pages/FaceAttendance'
 import ChatWidget from './components/ChatWidget'
 import { Toaster } from './components/fx'
 import NotifBell from './components/Bell'
@@ -32,6 +33,7 @@ const NAV: Item[] = [
   { to: '/app/students', label: 'Students', icon: Users, show: (m) => can(m, 'students.view') },
   { to: '/app/approvals', label: 'Approvals', icon: UserCheck, show: (m) => m.role === 'owner' },
   { to: '/app/enquiries', label: 'Enquiries', icon: Inbox, show: (m) => m.role === 'owner' },
+  { to: '/app/face', label: 'Face attendance', icon: ScanFace, show: (m) => can(m, 'face.manage') },
   { to: '/app/website', label: 'Gallery', icon: Images, show: (m) => m.role === 'owner' },
   { to: '/app/staff', label: 'Staff', icon: UserCog, show: (m) => m.role === 'owner' },
   { to: '/app/fees', label: 'Fees', icon: Receipt, show: (m) => m.role === 'student' || can(m, 'fees.view') },
@@ -124,6 +126,7 @@ export default function App() {
         <Route path="staff" element={<RoleGate roles={['owner']}><Staff /></RoleGate>} />
         <Route path="staff/:id" element={<RoleGate roles={['owner', 'staff']}><StaffDetail /></RoleGate>} />
         <Route path="approvals" element={<RoleGate roles={['owner']}><Approvals /></RoleGate>} />
+        <Route path="face" element={<FaceAttendance />} />
         <Route path="enquiries" element={<RoleGate roles={['owner']}><Enquiries /></RoleGate>} />
         <Route path="website" element={<RoleGate roles={['owner']}><SiteContent /></RoleGate>} />
         <Route path="fees" element={<Fees />} />

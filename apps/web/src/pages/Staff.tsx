@@ -5,7 +5,7 @@ import { api, useApi, useAuth, inr, fdate, age } from '../lib'
 import { Card, PageHeader, Table, Btn, Loading, ErrorMsg, Badge, FormModal, Modal, Field, Stat, Empty } from '../components/ui'
 
 const PERMS: [string, string][] = [
-  ['students.view', 'View assigned students'], ['students.viewAll', 'View all students'], ['students.edit', 'Add and edit students'],
+  ['students.view', 'View assigned students'], ['face.manage', 'Manage face attendance'], ['students.viewAll', 'View all students'], ['students.edit', 'Add and edit students'],
   ['attendance.mark', 'Mark attendance'], ['achievements.edit', 'Add achievements, matches, photos'], ['fees.view', 'View fees'],
   ['fees.collect', 'Collect fees and create bills'], ['equipment.view', 'View equipment stock'],
   ['students.contact', 'See parent phone and address'], ['students.medical', 'See and edit medical info'],

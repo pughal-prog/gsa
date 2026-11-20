@@ -40,15 +40,28 @@ export const fmtTime = (hhmm: string) => {
   return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`
 }
 
-/** Called when a student scans on the biometric device. Records attendance + notifies the parent. */
-export async function recordArrival(env: Env, student: Student, at = istNow()) {
-  const existing = await one(env.DB, 'SELECT id FROM attendance WHERE student_id = ? AND att_date = ?', student.id, at.date)
-  if (existing) return { status: 'duplicate' as const }
+/**
+ * Called when a student scans (biometric device or face attendance phone). Records attendance and
+ * notifies the parent. `opts.source` is stored on the row; `opts.notify=false` records silently
+ * (used for old offline events that are only now being uploaded).
+ */
+export async function recordArrival(env: Env, student: Student, at = istNow(), opts: { source?: string; notify?: boolean } = {}) {
+  const source = opts.source ?? 'biometric'
+  const notify = opts.notify ?? true
+  const existing = await one<{ id: number; status: string }>(env.DB, 'SELECT id, status FROM attendance WHERE student_id = ? AND att_date = ?', student.id, at.date)
+  // Legacy callers (no opts.source) keep the old behaviour: any existing row is a duplicate.
+  if (existing && (!opts.source || existing.status !== 'absent')) return { status: 'duplicate' as const }
   const grace = Number(env.LATE_GRACE_MINUTES || 10)
   const late = toMinutes(at.time) > toMinutes(student.batch_time) + grace
   const status = late ? 'late' : 'present'
-  await run(env.DB, 'INSERT INTO attendance (student_id, att_date, check_in, status, source) VALUES (?,?,?,?,?)',
-    student.id, at.date, at.time, status, 'biometric')
+  if (existing) {
+    // The 20:00 job marked this student absent before the offline scan arrived: correct it.
+    await run(env.DB, 'UPDATE attendance SET status = ?, check_in = ?, source = ? WHERE id = ?', status, at.time, source, existing.id)
+  } else {
+    await run(env.DB, 'INSERT INTO attendance (student_id, att_date, check_in, status, source) VALUES (?,?,?,?,?)',
+      student.id, at.date, at.time, status, source)
+  }
+  if (!notify) return { status }
   const academy = env.ACADEMY_NAME || 'the academy'
   if (late) {
     await notifyParent(env, student as any, 'late',
