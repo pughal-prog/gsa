@@ -116,7 +116,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         detector = FaceDetector(m("face_detector.csta")).also {
             // A native fault in the detector on a 720x1280 frame killed the whole app on the iQOO 12 (logcat: libtennis,
             // ts_Workbench_run). Single compute thread and a larger minimum face size keep its work small and predictable.
-            it.SetComputingThreads(1)
+            it.set(FaceDetector.Property.PROPERTY_NUMBER_THREADS, 1.0)
             it.set(FaceDetector.Property.PROPERTY_MIN_FACE_SIZE, 60.0)
         }
         landmarker = FaceLandmarker(m("face_landmarker_pts5.csta"))
