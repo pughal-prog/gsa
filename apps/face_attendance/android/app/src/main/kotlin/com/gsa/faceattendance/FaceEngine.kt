@@ -22,6 +22,7 @@ import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.security.MessageDigest
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -101,6 +102,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
                     .put("percent", (((fileIndex + frac) / max(fileCount, 1)) * 100).toInt())
             }
         }
+        importLocalModels()
         val dir = try {
             runBlocking { GdFaceModelProvider(ctx, GdFaceSDK.authorizeUrl, GdFaceSDK.apiKey).ensureModelsAvailable(listener) }
         } catch (e: GdFaceLicenseException) {
@@ -118,6 +120,48 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         db = FaceDatabase(m("face_recognizer.csta"))
         loadFaces()
         progress = JSONObject().put("phase", "ready")
+    }
+
+
+    /**
+     * Offline model install. If a folder `models-import` (inside this app's own external files folder, writable with
+     * `adb push` and with no storage permission) holds `authorize.json` plus the model files, every file is checked
+     * against the size and SHA-256 listed in authorize.json, copied into the SDK's model folder, and the SDK's
+     * manifest is written, so the SDK sees a complete cache and downloads nothing. The import folder is then removed.
+     * The checksums come from the vendor's own authorization answer, the same source the SDK trusts for a download.
+     */
+    private fun importLocalModels() {
+        val src = File(ctx.getExternalFilesDir(null) ?: return, "models-import")
+        val auth = File(src, "authorize.json")
+        if (!auth.isFile) return
+        val models = JSONObject(auth.readText()).getJSONArray("models")
+        val dst = File(ctx.filesDir, "gdface_models").apply { mkdirs() }
+        // already imported on an earlier start (the leftover files could not be deleted): do not repeat the work
+        if (File(dst, "manifest.json").isFile && (0 until models.length()).map { models.getJSONObject(it) }.all { m ->
+                File(dst, m.getString("name")).let { it.isFile && it.length() == m.getLong("sizeBytes") } || m.getString("name") == "mask_detector.csta" }) {
+            src.listFiles()?.forEach { it.delete() }; src.delete(); return
+        }
+        progress = JSONObject().put("phase", "import").put("percent", 0)
+        val entries = JSONArray()
+        for (i in 0 until models.length()) {
+            val m = models.getJSONObject(i)
+            val name = m.getString("name"); val sha = m.getString("sha256"); val size = m.getLong("sizeBytes")
+            require(name.matches(Regex("[A-Za-z0-9_.-]+"))) { "Unexpected model name" }
+            val f = File(src, name)
+            if (!f.isFile) { if (name == "mask_detector.csta") continue; throw IllegalStateException("Missing model file $name in models-import") }
+            if (f.length() != size) throw IllegalStateException("$name has the wrong size")
+            val digest = MessageDigest.getInstance("SHA-256")
+            f.inputStream().use { inp -> val b = ByteArray(65536); while (true) { val n = inp.read(b); if (n < 0) break; digest.update(b, 0, n) } }
+            if (!digest.digest().joinToString("") { "%02x".format(it) }.equals(sha, true)) throw IllegalStateException("$name failed the checksum, copy it again")
+            val part = File(dst, "$name.part")
+            f.inputStream().use { inp -> part.outputStream().use { out -> inp.copyTo(out) } }
+            val fin = File(dst, name); fin.delete()
+            if (!part.renameTo(fin)) throw IllegalStateException("Could not store $name")
+            entries.put(JSONObject().put("name", name).put("sizeBytes", fin.length()).put("sha256", sha))
+            progress = JSONObject().put("phase", "import").put("percent", ((i + 1) * 100) / models.length())
+        }
+        File(dst, "manifest.json").writeText(JSONObject().put("files", entries).put("downloadedAtMs", System.currentTimeMillis()).toString())
+        src.listFiles()?.forEach { it.delete() }; src.delete()
     }
 
     private fun recognizerSha(): String? = try {
