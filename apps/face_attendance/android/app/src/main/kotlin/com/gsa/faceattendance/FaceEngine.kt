@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.util.Log
 import android.media.ExifInterface
 import com.ahmadarif.gdface.sdk.GdFaceDownloadProgressListener
 import com.ahmadarif.gdface.sdk.GdFaceLicenseException
@@ -261,18 +262,23 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         }
     }
 
+    /** Step markers: if a native crash happens, the last GsaFace line in logcat names the step that was running. */
+    private fun mark(step: String) { Log.i("GsaFace", step) }
+
     private class Face(val bmp: Bitmap, val img: SeetaImageData, val rect: SeetaRect, val pts: Array<SeetaPointF>, val facesInFrame: Int, val crowded: Boolean)
 
     private fun findFace(bmp: Bitmap): Face? {
-        val det = detector ?: return null; val mark = landmarker ?: return null
+        val det = detector ?: return null; val lm = landmarker ?: return null
+        mark("detect ${bmp.width}x${bmp.height}")
         val img = toNative(bmp)
         val faces = det.Detect(img)
         if (faces.isNullOrEmpty()) return null
         val sorted = faces.sortedByDescending { it.width.toLong() * it.height }
         val main = sorted[0]
         val crowded = sorted.size > 1 && sorted[1].width.toLong() * sorted[1].height >= 0.4 * main.width.toLong() * main.height
-        val pts = Array(mark.number()) { SeetaPointF() }
-        mark.mark(img, main, pts)
+        val pts = Array(lm.number()) { SeetaPointF() }
+        mark("landmarks")
+        lm.mark(img, main, pts)
         return Face(bmp, img, main, pts, sorted.size, crowded)
     }
 
@@ -322,6 +328,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
 
     private fun liveness(f: Face): Live {
         val a = antiSpoof ?: return Live(false, true, -1f)
+        mark("liveness")
         val status = a.Predict(f.img, f.rect, f.pts)
         val c = FloatArray(1); val r = FloatArray(1)
         val reality = try { a.GetPreFrameScore(c, r); r[0] } catch (e: Throwable) { -1f }
@@ -343,6 +350,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         if (count <= 0L) return emptyList()
         val n = min(12L, count)
         val idx = LongArray(n.toInt()); val sim = FloatArray(n.toInt())
+        mark("querytop n=$n count=$count")
         val found = d.QueryTop(f.img, f.pts, n, idx, sim).toInt()
         val best = HashMap<String, Float>()
         for (i in 0 until min(found, n.toInt())) {
@@ -424,6 +432,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
             val other = rank(f).firstOrNull { it.studentId != sid }
             if (other != null && other.sim >= cfg.matchThreshold) return out.put("status", "duplicate").put("other_student_id", other.studentId).also { bmp.recycle() }
         } else {
+            mark("compare")
             val same = d.Compare(caps[0].img, caps[0].pts, f.img, f.pts)
             if (same < cfg.matchThreshold) { bmp.recycle(); return out.put("status", "poor").put("reason", "different_person") }
         }
@@ -439,6 +448,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         val old = studentOfIndex.filterValues { it == sid }.keys.toList()
         val added = ArrayList<Long>()
         try {
+            mark("register")
             for (c in caps) { val i = d.Register(c.img, c.pts); if (i < 0) throw IllegalStateException("Register failed"); added.add(i) }
             old.forEach { d.Delete(it); studentOfIndex.remove(it) }
             added.forEach { studentOfIndex[it] = sid }
