@@ -120,7 +120,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
             it.set(FaceDetector.Property.PROPERTY_MIN_FACE_SIZE, 60.0)
             // Default confidence is 0.9, which misses real faces in uneven light. Later checks (landmarks, pose, sharpness,
             // liveness, recognition) reject anything that is not a clean face, so a lower detector bar only helps recall.
-            it.set(FaceDetector.Property.PROPERTY_THRESHOLD, 0.7)
+            it.set(FaceDetector.Property.PROPERTY_THRESHOLD, 0.55)
         }
         landmarker = FaceLandmarker(m("face_landmarker_pts5.csta"))
         antiSpoof = FaceAntiSpoofing(m("fas_first.csta", "fas_second.csta")).also {
@@ -282,7 +282,26 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
 
     private class Face(val bmp: Bitmap, val img: SeetaImageData, val rect: SeetaRect, val pts: Array<SeetaPointF>, val facesInFrame: Int, val crowded: Boolean)
 
+    /** Looks for a face upright first, then turned a quarter either way (covers a picture saved sideways by the camera). */
     private fun findFace(bmp: Bitmap): Face? {
+        findFaceIn(bmp)?.let { return it }
+        for (deg in floatArrayOf(90f, 270f)) {
+            val r = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, Matrix().apply { postRotate(deg) }, true)
+            val f = findFaceIn(r)
+            if (f != null) { Log.i("GsaFace", "face found after rotating $deg degrees"); return f }
+            r.recycle()
+        }
+        return null
+    }
+
+    @Volatile private var lastDebugMs = 0L
+    /** Keeps the last picture in which no face was found, so it can be pulled with adb and looked at. */
+    private fun saveNoFace(b: Bitmap) {
+        val now = System.currentTimeMillis(); if (now - lastDebugMs < 2000) return; lastDebugMs = now
+        try { val d = ctx.getExternalFilesDir(null) ?: return; java.io.FileOutputStream(File(d, "last_noface.jpg")).use { b.compress(Bitmap.CompressFormat.JPEG, 85, it) } } catch (_: Throwable) { }
+    }
+
+    private fun findFaceIn(bmp: Bitmap): Face? {
         val det = detector ?: return null; val lm = landmarker ?: return null
         // The detector works in strides of 32: give it a canvas padded (black, right and bottom) to a multiple of 32.
         // Face coordinates stay valid for the original bitmap because the picture stays anchored at the top left.
@@ -400,7 +419,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         val out = JSONObject()
         val bmp = decode(path) ?: return out.put("status", "error").put("reason", "bad_image")
         try {
-            val f = findFace(bmp) ?: return log(out.put("status", "no_face"))
+            val f = findFace(bmp) ?: run { saveNoFace(bmp); return log(out.put("status", "no_face").put("w", bmp.width).put("h", bmp.height)) }
             if (f.crowded) return log(out.put("status", "multiple").put("reason", "multiple_faces"))
             quality(f, out)?.let { return log(out.put("status", "poor").put("reason", it)) }
             val live = liveness(f); out.put("liveness", live.reality.toDouble()).put("clarity", lastClarity.toDouble())
@@ -447,7 +466,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
     private fun enrolFrameImpl(path: String): JSONObject {
         val out = JSONObject(); val sid = enrolId ?: return out.put("status", "error").put("reason", "not_started")
         val bmp = decode(path) ?: return out.put("status", "error").put("reason", "bad_image")
-        val f = findFace(bmp) ?: run { bmp.recycle(); return out.put("status", "no_face") }
+        val f = findFace(bmp) ?: run { saveNoFace(bmp); bmp.recycle(); return out.put("status", "no_face").put("w", bmp.width).put("h", bmp.height) }
         if (f.crowded) { bmp.recycle(); return out.put("status", "multiple") }
         quality(f, out)?.let { bmp.recycle(); return out.put("status", "poor").put("reason", it) }
         val live = liveness(f)

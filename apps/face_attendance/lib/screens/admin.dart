@@ -243,7 +243,7 @@ class _EnrolCaptureState extends State<EnrolCapture> {
               setState(() { count = r['count'] as int; hint = count < needed ? 'Good. Turn slightly and hold still' : 'Saving'; });
               CamSession.discard(await next); await Future.delayed(const Duration(milliseconds: 350)); next = cam.snap(); break;
             case 'duplicate': throw 'This face already matches another student (id ${r['other_student_id']}). Enrolment stopped.';
-            case 'no_face': setState(() => hint = 'Look at the camera'); break;
+            case 'no_face': setState(() => hint = 'No face found, look at the camera${r['w'] != null ? '\n(picture ${r['w']}x${r['h']})' : ''}'); break;
             case 'multiple': setState(() => hint = 'One person only'); break;
             default: setState(() => hint = (_why[r['reason']] ?? 'Adjust your position') + _score(r));
           }
