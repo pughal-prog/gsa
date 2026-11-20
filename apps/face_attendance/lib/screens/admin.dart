@@ -230,7 +230,7 @@ class _EnrolCaptureState extends State<EnrolCapture> {
           case 'duplicate': throw 'This face already matches another student (id ${r['other_student_id']}). Enrolment stopped.';
           case 'no_face': setState(() => hint = 'Look at the camera'); break;
           case 'multiple': setState(() => hint = 'One person only'); break;
-          default: setState(() => hint = _why[r['reason']] ?? 'Adjust your position');
+          default: setState(() => hint = (_why[r['reason']] ?? 'Adjust your position') + _score(r));
         }
       }
       if (count < needed) throw 'Could not capture enough good frames. Try again in better light.';
@@ -246,6 +246,13 @@ class _EnrolCaptureState extends State<EnrolCapture> {
 
   @override
   void dispose() { running = false; cam.close(); Native.enrolCancel(); super.dispose(); }
+
+  /// Live-face scores, shown while a frame is rejected for liveness so the threshold can be tuned from real numbers.
+  static String _score(Map r) {
+    if (r['reason'] != 'spoof' && r['reason'] != 'liveness_unclear') return '';
+    final l = r['liveness'], c = r['clarity'];
+    return (l is num && c is num) ? '\n(reality ${l.toStringAsFixed(2)}, clarity ${c.toStringAsFixed(2)})' : '';
+  }
 
   static const _why = {
     'too_far': 'Move closer', 'not_centered': 'Centre your face', 'tilted': 'Keep your head straight', 'turned': 'Look at the camera',

@@ -56,6 +56,10 @@ class _ScanScreenState extends State<ScanScreen> {
         setState(() {
           hint = st == 'pending' ? 'Hold still' : st == 'no_face' ? 'Look at the camera' : st == 'unknown' ? 'Not recognised' :
               st == 'ambiguous' ? 'Cannot be sure, try again' : st == 'spoof' ? 'Live face required' : (_hints[r['reason']] ?? 'Adjust position');
+          if (r['reason'] == 'spoof' || r['reason'] == 'liveness_unclear') {
+            final l = r['liveness'], c = r['clarity'];
+            if (l is num && c is num) hint = '$hint\n(reality ${l.toStringAsFixed(2)}, clarity ${c.toStringAsFixed(2)})';
+          }
         });
       }
       if (!done && mounted) _finish({'status': 'timeout'});

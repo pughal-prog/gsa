@@ -340,6 +340,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         return Pair(sum / g.size, accSq / n - (acc / n) * (acc / n))
     }
 
+    @Volatile private var lastClarity = -1f
     private data class Live(val ok: Boolean, val unclear: Boolean, val reality: Float)
 
     private fun liveness(f: Face): Live {
@@ -347,7 +348,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         mark("liveness")
         val status = a.Predict(f.img, f.rect, f.pts)
         val c = FloatArray(1); val r = FloatArray(1)
-        val reality = try { a.GetPreFrameScore(c, r); r[0] } catch (e: Throwable) { -1f }
+        val reality = try { a.GetPreFrameScore(c, r); lastClarity = c[0]; r[0] } catch (e: Throwable) { -1f }
         return when (status) {
             FaceAntiSpoofing.Status.REAL -> Live(true, false, reality)
             FaceAntiSpoofing.Status.SPOOF -> Live(false, false, reality)
@@ -395,7 +396,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
             val f = findFace(bmp) ?: return log(out.put("status", "no_face"))
             if (f.crowded) return log(out.put("status", "multiple").put("reason", "multiple_faces"))
             quality(f, out)?.let { return log(out.put("status", "poor").put("reason", it)) }
-            val live = liveness(f); out.put("liveness", live.reality.toDouble())
+            val live = liveness(f); out.put("liveness", live.reality.toDouble()).put("clarity", lastClarity.toDouble())
             if (!live.ok) return log(out.put("status", if (live.unclear) "poor" else "spoof").put("reason", if (live.unclear) "liveness_unclear" else "spoof"))
             val ranked = rank(f)
             val top = ranked.firstOrNull(); val second = ranked.getOrNull(1)
@@ -442,6 +443,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         if (f.crowded) { bmp.recycle(); return out.put("status", "multiple") }
         quality(f, out)?.let { bmp.recycle(); return out.put("status", "poor").put("reason", it) }
         val live = liveness(f)
+        out.put("liveness", live.reality.toDouble()).put("clarity", lastClarity.toDouble())
         if (!live.ok) { bmp.recycle(); return out.put("status", "poor").put("reason", if (live.unclear) "liveness_unclear" else "spoof") }
         val d = db ?: return out.put("status", "error").put("reason", "engine_not_ready")
         if (caps.isEmpty()) {
