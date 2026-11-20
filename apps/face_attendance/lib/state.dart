@@ -74,7 +74,7 @@ class AppState extends ChangeNotifier {
   Future<void> setCamera(String c) async { camera = c; await Native.kvPut('camera', c); notifyListeners(); }
 
   Future<void> pair(String code) async {
-    final r = await Api().pair(code.trim().toUpperCase());
+    final r = await Api().pair(code.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), ''));
     api.deviceToken = r['token'] as String;
     await Native.kvPut('device_token', api.deviceToken!);
     deviceName = (r['device'] as Map)['name'] as String;
