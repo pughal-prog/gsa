@@ -126,6 +126,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         antiSpoof = FaceAntiSpoofing(m("fas_first.csta", "fas_second.csta")).also {
             val c = FloatArray(1); val r = FloatArray(1); it.GetThreshold(c, r); defaultClarity = c[0]
             it.SetThreshold(defaultClarity, cfg.livenessReality)
+            it.SetVideoFrameCount(5)
         }
         db = FaceDatabase(m("face_recognizer.csta"))
         loadFaces()
@@ -370,8 +371,12 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
 
     private fun liveness(f: Face): Live {
         val a = antiSpoof ?: return Live(false, true, -1f)
+        // Setting "livenessReality" to 0 switches the live-face check off (for testing or a trusted, supervised setup).
+        if (cfg.livenessReality <= 0.001f) return Live(true, false, -1f)
         mark("liveness")
-        val status = a.Predict(f.img, f.rect, f.pts)
+        // Video mode: the check looks at a short run of frames (both models) and answers DETECTING until it has enough.
+        // The single-picture mode returned a reality score of 0.00 for real faces on this phone, so it is not used.
+        val status = a.PredictVideo(f.img, f.rect, f.pts)
         val c = FloatArray(1); val r = FloatArray(1)
         val reality = try { a.GetPreFrameScore(c, r); lastClarity = c[0]; r[0] } catch (e: Throwable) { -1f }
         return when (status) {
@@ -469,12 +474,12 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         val f = findFace(bmp) ?: run { saveNoFace(bmp); bmp.recycle(); return out.put("status", "no_face").put("w", bmp.width).put("h", bmp.height) }
         if (f.crowded) { bmp.recycle(); return out.put("status", "multiple") }
         quality(f, out)?.let { bmp.recycle(); return out.put("status", "poor").put("reason", it) }
-        // the on-screen guide is a circle in the middle of the picture: keep the face inside it and not too large for it
+        // the on-screen guide is a face-shaped oval in the middle of the picture (0.62 wide, 0.82 tall, in picture widths)
         run {
             val dx = (f.rect.x + f.rect.width / 2.0 - f.bmp.width / 2.0) / f.bmp.width
             val dy = (f.rect.y + f.rect.height / 2.0 - f.bmp.height / 2.0) / f.bmp.width
-            if (hypot(dx, dy) > 0.20) { bmp.recycle(); return out.put("status", "poor").put("reason", "off_center") }
-            if (f.rect.width > 0.62 * f.bmp.width) { bmp.recycle(); return out.put("status", "poor").put("reason", "too_close") }
+            if ((dx / 0.16) * (dx / 0.16) + (dy / 0.22) * (dy / 0.22) > 1.0) { bmp.recycle(); return out.put("status", "poor").put("reason", "off_center") }
+            if (f.rect.width > 0.56 * f.bmp.width) { bmp.recycle(); return out.put("status", "poor").put("reason", "too_close") }
         }
         val live = liveness(f)
         out.put("liveness", live.reality.toDouble()).put("clarity", lastClarity.toDouble())
