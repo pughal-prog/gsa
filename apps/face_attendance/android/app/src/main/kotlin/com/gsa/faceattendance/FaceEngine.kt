@@ -469,6 +469,13 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         val f = findFace(bmp) ?: run { saveNoFace(bmp); bmp.recycle(); return out.put("status", "no_face").put("w", bmp.width).put("h", bmp.height) }
         if (f.crowded) { bmp.recycle(); return out.put("status", "multiple") }
         quality(f, out)?.let { bmp.recycle(); return out.put("status", "poor").put("reason", it) }
+        // the on-screen guide is a circle in the middle of the picture: keep the face inside it and not too large for it
+        run {
+            val dx = (f.rect.x + f.rect.width / 2.0 - f.bmp.width / 2.0) / f.bmp.width
+            val dy = (f.rect.y + f.rect.height / 2.0 - f.bmp.height / 2.0) / f.bmp.width
+            if (hypot(dx, dy) > 0.20) { bmp.recycle(); return out.put("status", "poor").put("reason", "off_center") }
+            if (f.rect.width > 0.62 * f.bmp.width) { bmp.recycle(); return out.put("status", "poor").put("reason", "too_close") }
+        }
         val live = liveness(f)
         out.put("liveness", live.reality.toDouble()).put("clarity", lastClarity.toDouble())
         if (!live.ok) { bmp.recycle(); return out.put("status", "poor").put("reason", if (live.unclear) "liveness_unclear" else "spoof") }

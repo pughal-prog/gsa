@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -207,7 +208,7 @@ class EnrolCapture extends StatefulWidget {
 }
 
 class _EnrolCaptureState extends State<EnrolCapture> {
-  final cam = CamSession(); String hint = 'Starting camera'; int count = 0; int needed = 3; bool running = true; String? err; int? lastMs; String? camNow; String? flipTo;
+  final cam = CamSession(); String hint = 'Starting camera'; int count = 0; int needed = 3; bool running = true; String? err; int? lastMs; String? camNow; String? flipTo; Color guide = Colors.white;
 
   @override
   void initState() { super.initState(); camNow = widget.s.camera; _run(); }
@@ -219,7 +220,7 @@ class _EnrolCaptureState extends State<EnrolCapture> {
       await cam.open(camNow!);
       if (mounted) setState(() {});
       await Native.enrolBegin(widget.student['id'].toString());
-      setState(() => hint = 'Look at the camera');
+      setState(() => hint = 'Put your face inside the circle');
       final end = DateTime.now().add(const Duration(seconds: 60));
       // The next picture is taken while the current one is analysed, so the camera is never idle.
       Future<String?> next = cam.snap();
@@ -240,12 +241,12 @@ class _EnrolCaptureState extends State<EnrolCapture> {
           lastMs = r['ms'] is num ? (r['ms'] as num).toInt() : null;
           switch (r['status']) {
             case 'captured':
-              setState(() { count = r['count'] as int; hint = count < needed ? 'Good. Turn slightly and hold still' : 'Saving'; });
+              setState(() { count = r['count'] as int; hint = count < needed ? 'Good. Turn slightly and hold still' : 'Saving'; guide = Colors.greenAccent; });
               CamSession.discard(await next); await Future.delayed(const Duration(milliseconds: 350)); next = cam.snap(); break;
             case 'duplicate': throw 'This face already matches another student (id ${r['other_student_id']}). Enrolment stopped.';
-            case 'no_face': setState(() => hint = 'No face found, look at the camera${r['w'] != null ? '\n(picture ${r['w']}x${r['h']})' : ''}'); break;
-            case 'multiple': setState(() => hint = 'One person only'); break;
-            default: setState(() => hint = (_why[r['reason']] ?? 'Adjust your position') + _score(r));
+            case 'no_face': setState(() { guide = Colors.white; hint = 'Put your face inside the circle${r['w'] != null ? '\n(picture ${r['w']}x${r['h']})' : ''}'; }); break;
+            case 'multiple': setState(() { guide = Colors.amber; hint = 'One person only'; }); break;
+            default: setState(() { guide = Colors.amber; hint = (_why[r['reason']] ?? 'Adjust your position') + _score(r); });
           }
         }
       } finally { CamSession.discard(await next); }
@@ -274,6 +275,7 @@ class _EnrolCaptureState extends State<EnrolCapture> {
     'too_far': 'Move closer', 'not_centered': 'Centre your face', 'tilted': 'Keep your head straight', 'turned': 'Look at the camera',
     'too_dark': 'Too dark', 'too_bright': 'Too bright', 'blurry': 'Hold still', 'liveness_unclear': 'Look at the camera, hold still',
     'spoof': 'Live face required', 'different_person': 'One person only',
+    'off_center': 'Move your face into the circle', 'too_close': 'Move back a little',
   };
 
   @override
@@ -286,8 +288,12 @@ class _EnrolCaptureState extends State<EnrolCapture> {
       ]),
       body: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
         Expanded(child: Center(child: showCam
-            ? ClipRRect(borderRadius: BorderRadius.circular(18), child: AspectRatio(aspectRatio: 3 / 4, child: FittedBox(fit: BoxFit.cover, clipBehavior: Clip.hardEdge,
-                child: SizedBox(width: cam.ctl!.value.previewSize!.height, height: cam.ctl!.value.previewSize!.width, child: CameraPreview(cam.ctl!)))))
+            ? ClipRRect(borderRadius: BorderRadius.circular(18), child: AspectRatio(aspectRatio: 3 / 4, child: Stack(fit: StackFit.expand, children: [
+                FittedBox(fit: BoxFit.cover, clipBehavior: Clip.hardEdge,
+                    child: SizedBox(width: cam.ctl!.value.previewSize!.height, height: cam.ctl!.value.previewSize!.width, child: CameraPreview(cam.ctl!))),
+                // face guide: the picture is dimmed outside the circle, the ring fills one segment per good photo
+                CustomPaint(painter: _GuidePainter(count, needed, guide)),
+              ])))
             : Icon(err != null ? Icons.error_outline : Icons.face, size: 72, color: err != null ? C.bad : C.brand))),
         const SizedBox(height: 12),
         if (err == null) Text('$pct% enrolled', style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: C.ink)),
@@ -301,6 +307,25 @@ class _EnrolCaptureState extends State<EnrolCapture> {
       ])),
     );
   }
+}
+
+/// Dims the camera picture outside a circle and draws a ring around it: one segment per photo needed, filled when taken.
+class _GuidePainter extends CustomPainter {
+  final int count, needed; final Color status;
+  _GuidePainter(this.count, this.needed, this.status);
+  @override
+  void paint(Canvas c, Size s) {
+    final center = Offset(s.width / 2, s.height / 2), r = s.width * 0.35;
+    c.drawPath(Path()..fillType = PathFillType.evenOdd..addRect(Offset.zero & s)..addOval(Rect.fromCircle(center: center, radius: r)), Paint()..color = const Color(0x99000000));
+    c.drawCircle(center, r, Paint()..style = PaintingStyle.stroke..strokeWidth = 3..color = status);
+    final ring = Rect.fromCircle(center: center, radius: r + 12);
+    final n = math.max(needed, 1); final seg = 2 * math.pi / n; const gap = 0.2;
+    for (var i = 0; i < n; i++) {
+      c.drawArc(ring, -math.pi / 2 + i * seg + gap / 2, seg - gap, false, Paint()..style = PaintingStyle.stroke..strokeWidth = 9..strokeCap = StrokeCap.round..color = i < count ? Colors.greenAccent : Colors.white38);
+    }
+  }
+  @override
+  bool shouldRepaint(_GuidePainter o) => o.count != count || o.needed != needed || o.status != status;
 }
 
 // ------------------------------------------------------------------ manual fallback
