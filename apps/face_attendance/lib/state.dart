@@ -57,7 +57,7 @@ class AppState extends ChangeNotifier {
       try {
         final p = await Native.engineProgress();
         if (p['phase'] == 'import') { engineMessage = 'Installing models from the phone folder ${p['percent'] ?? 0}%'; notifyListeners(); }
-        if (p['phase'] == 'models') { engineMessage = 'Downloading face models ${p['percent'] ?? 0}%'; notifyListeners(); }
+        if (p['phase'] == 'models') { engineMessage = 'Downloading face models ${p['percent'] ?? 0}%\n${p['note'] ?? ''}'; notifyListeners(); }
       } catch (_) {}
     });
     try {

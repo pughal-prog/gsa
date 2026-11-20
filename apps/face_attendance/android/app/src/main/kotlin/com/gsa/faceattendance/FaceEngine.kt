@@ -89,6 +89,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
     val ready get() = db != null
 
     @Volatile var progress: JSONObject = JSONObject().put("phase", "idle")
+    @Volatile var importNote: String = ""
 
     // ------------------------------------------------------------------ init
     /** Downloads (first run only, needs internet) and verifies the models, then loads them and the sealed face database. */
@@ -99,7 +100,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         val listener = object : GdFaceDownloadProgressListener {
             override fun onFileProgress(fileName: String, fileIndex: Int, fileCount: Int, bytesDownloaded: Long, totalBytes: Long) {
                 val frac = if (totalBytes > 0) bytesDownloaded.toDouble() / totalBytes else 0.0
-                progress = JSONObject().put("phase", "models").put("file", fileName)
+                progress = JSONObject().put("phase", "models").put("file", fileName).put("note", importNote)
                     .put("percent", (((fileIndex + frac) / max(fileCount, 1)) * 100).toInt())
             }
         }
@@ -132,8 +133,11 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
      * The checksums come from the vendor's own authorization answer, the same source the SDK trusts for a download.
      */
     private fun importLocalModels() {
-        val src = File(ctx.getExternalFilesDir(null) ?: return, "models-import")
+        val ext = ctx.getExternalFilesDir(null)
+        val src = File(ext ?: return, "models-import")
         val auth = File(src, "authorize.json")
+        importNote = "import folder ${src.absolutePath}: dir=${src.isDirectory} canRead=${src.canRead()} files=${src.list()?.size ?: -1} authorize.json=${auth.isFile}/${auth.canRead()}"
+        Log.i("GsaFace", importNote)
         if (!auth.isFile) return
         val models = JSONObject(auth.readText()).getJSONArray("models")
         val dst = File(ctx.filesDir, "gdface_models").apply { mkdirs() }
