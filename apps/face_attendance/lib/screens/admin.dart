@@ -220,7 +220,7 @@ class _EnrolCaptureState extends State<EnrolCapture> {
       await cam.open(camNow!);
       if (mounted) setState(() {});
       await Native.enrolBegin(widget.student['id'].toString());
-      setState(() => hint = 'Put your face inside the circle');
+      setState(() => hint = 'Put your face inside the oval');
       final end = DateTime.now().add(const Duration(seconds: 60));
       // The next picture is taken while the current one is analysed, so the camera is never idle.
       Future<String?> next = cam.snap();
@@ -244,7 +244,7 @@ class _EnrolCaptureState extends State<EnrolCapture> {
               setState(() { count = r['count'] as int; hint = count < needed ? 'Good. Turn slightly and hold still' : 'Saving'; guide = Colors.greenAccent; });
               CamSession.discard(await next); await Future.delayed(const Duration(milliseconds: 350)); next = cam.snap(); break;
             case 'duplicate': throw 'This face already matches another student (id ${r['other_student_id']}). Enrolment stopped.';
-            case 'no_face': setState(() { guide = Colors.white; hint = 'Put your face inside the circle${r['w'] != null ? '\n(picture ${r['w']}x${r['h']})' : ''}'; }); break;
+            case 'no_face': setState(() { guide = Colors.white; hint = camNow == 'front' ? 'No face found. Put your face inside the oval' : 'No face found. This is the REAR camera: point the back of the phone at the face, or tap the switch icon above for the front camera'; }); break;
             case 'multiple': setState(() { guide = Colors.amber; hint = 'One person only'; }); break;
             default: setState(() { guide = Colors.amber; hint = (_why[r['reason']] ?? 'Adjust your position') + _score(r); });
           }
@@ -275,7 +275,7 @@ class _EnrolCaptureState extends State<EnrolCapture> {
     'too_far': 'Move closer', 'not_centered': 'Centre your face', 'tilted': 'Keep your head straight', 'turned': 'Look at the camera',
     'too_dark': 'Too dark', 'too_bright': 'Too bright', 'blurry': 'Hold still', 'liveness_unclear': 'Look at the camera, hold still',
     'spoof': 'Live face required', 'different_person': 'One person only',
-    'off_center': 'Move your face into the circle', 'too_close': 'Move back a little',
+    'off_center': 'Move your face into the oval', 'too_close': 'Move back a little',
   };
 
   @override
@@ -293,6 +293,8 @@ class _EnrolCaptureState extends State<EnrolCapture> {
                     child: SizedBox(width: cam.ctl!.value.previewSize!.height, height: cam.ctl!.value.previewSize!.width, child: CameraPreview(cam.ctl!))),
                 // face guide: the picture is dimmed outside the circle, the ring fills one segment per good photo
                 CustomPaint(painter: _GuidePainter(count, needed, guide)),
+                Positioned(top: 10, left: 10, child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(12)),
+                    child: Text(camNow == 'front' ? 'Front camera' : 'Rear camera', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)))),
               ])))
             : Icon(err != null ? Icons.error_outline : Icons.face, size: 72, color: err != null ? C.bad : C.brand))),
         const SizedBox(height: 12),
@@ -309,16 +311,18 @@ class _EnrolCaptureState extends State<EnrolCapture> {
   }
 }
 
-/// Dims the camera picture outside a circle and draws a ring around it: one segment per photo needed, filled when taken.
+/// Dims the camera picture outside a face-shaped oval and draws a ring around it: one segment per photo needed, filled when taken.
 class _GuidePainter extends CustomPainter {
   final int count, needed; final Color status;
   _GuidePainter(this.count, this.needed, this.status);
   @override
   void paint(Canvas c, Size s) {
-    final center = Offset(s.width / 2, s.height / 2), r = s.width * 0.35;
-    c.drawPath(Path()..fillType = PathFillType.evenOdd..addRect(Offset.zero & s)..addOval(Rect.fromCircle(center: center, radius: r)), Paint()..color = const Color(0x99000000));
-    c.drawCircle(center, r, Paint()..style = PaintingStyle.stroke..strokeWidth = 3..color = status);
-    final ring = Rect.fromCircle(center: center, radius: r + 12);
+    final center = Offset(s.width / 2, s.height / 2);
+    final w = s.width * 0.62, h = w * 1.32;   // a face is taller than it is wide
+    final oval = Rect.fromCenter(center: center, width: w, height: h);
+    c.drawPath(Path()..fillType = PathFillType.evenOdd..addRect(Offset.zero & s)..addOval(oval), Paint()..color = const Color(0x99000000));
+    c.drawOval(oval, Paint()..style = PaintingStyle.stroke..strokeWidth = 3..color = status);
+    final ring = oval.inflate(12);
     final n = math.max(needed, 1); final seg = 2 * math.pi / n; const gap = 0.2;
     for (var i = 0; i < n; i++) {
       c.drawArc(ring, -math.pi / 2 + i * seg + gap / 2, seg - gap, false, Paint()..style = PaintingStyle.stroke..strokeWidth = 9..strokeCap = StrokeCap.round..color = i < count ? Colors.greenAccent : Colors.white38);

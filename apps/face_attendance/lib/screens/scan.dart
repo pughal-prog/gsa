@@ -67,7 +67,7 @@ class _ScanScreenState extends State<ScanScreen> {
         setState(() {
           final sc = r['score'], sd = r['second'], ms = r['ms'], px = r['face_px'];
           detail = [if (sc is num) 'match ${sc.toStringAsFixed(2)}', if (sd is num && sd > 0) 'next ${sd.toStringAsFixed(2)}', if (px is num && px > 0) 'face ${px}px', if (ms is num) '${ms}ms'].join('  ·  ');
-          hint = st == 'pending' ? 'Hold still' : st == 'no_face' ? 'No face found, look at the camera${r['w'] != null ? '\n(picture ${r['w']}x${r['h']})' : ''}' : st == 'unknown' ? 'Not recognised' :
+          hint = st == 'pending' ? 'Hold still' : st == 'no_face' ? (camNow == 'front' ? 'No face found, look at the camera' : 'No face found. REAR camera is on: point the back of the phone at the face, or tap the switch icon for the front camera') : st == 'unknown' ? 'Not recognised' :
               st == 'ambiguous' ? 'Cannot be sure, try again' : st == 'spoof' ? 'Live face required' : (_hints[r['reason']] ?? 'Adjust position');
           if (r['reason'] == 'spoof' || r['reason'] == 'liveness_unclear') {
             final l = r['liveness'], c = r['clarity'];
