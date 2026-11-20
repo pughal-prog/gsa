@@ -337,7 +337,11 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
     /** Best similarity per student (a student may own several templates), best first. */
     private fun rank(f: Face): List<Ranked> {
         val d = db ?: return emptyList()
-        val n = 12L
+        // Never query an empty database (first enrolment) and never ask for more hits than it holds:
+        // native code does not guard against either, and a native fault kills the whole app.
+        val count = d.Count()
+        if (count <= 0L) return emptyList()
+        val n = min(12L, count)
         val idx = LongArray(n.toInt()); val sim = FloatArray(n.toInt())
         val found = d.QueryTop(f.img, f.pts, n, idx, sim).toInt()
         val best = HashMap<String, Float>()
