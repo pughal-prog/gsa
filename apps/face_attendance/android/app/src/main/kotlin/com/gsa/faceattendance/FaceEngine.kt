@@ -36,7 +36,7 @@ data class Cfg(
     val minMargin: Float = 0.05f,        // best student must beat the next different student by this much
     val livenessReality: Float = 0.80f,  // SeetaFace "reality" threshold for FaceAntiSpoofing
     val hitsRequired: Int = 2,           // live, agreeing frames needed before attendance is recorded
-    val minFacePx: Int = 140,            // smallest accepted face (shorter side, pixels, after downscale)
+    val minFacePx: Int = 100,            // smallest accepted face (shorter side, pixels, after downscale)
     val maxRollDeg: Double = 20.0,
     val maxYaw: Double = 0.30,           // |nose offset| / eye distance
     val minBright: Double = 50.0,
@@ -113,7 +113,12 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
         }
         modelsDir = dir
         fun m(vararg names: String) = SeetaModelSetting(0, names.map { File(dir, it).absolutePath }.toTypedArray(), SeetaDevice.SEETA_DEVICE_CPU)
-        detector = FaceDetector(m("face_detector.csta"))
+        detector = FaceDetector(m("face_detector.csta")).also {
+            // A native fault in the detector on a 720x1280 frame killed the whole app on the iQOO 12 (logcat: libtennis,
+            // ts_Workbench_run). Single compute thread and a larger minimum face size keep its work small and predictable.
+            it.SetComputingThreads(1)
+            it.set(FaceDetector.Property.PROPERTY_MIN_FACE_SIZE, 60.0)
+        }
         landmarker = FaceLandmarker(m("face_landmarker_pts5.csta"))
         antiSpoof = FaceAntiSpoofing(m("fas_first.csta", "fas_second.csta")).also {
             val c = FloatArray(1); val r = FloatArray(1); it.GetThreshold(c, r); defaultClarity = c[0]
@@ -234,7 +239,7 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
     // ------------------------------------------------------------------ image helpers
     companion object {
         /** Decodes a JPEG, applies its EXIF rotation and downsizes it to at most [maxEdge] pixels. */
-        fun decode(path: String, maxEdge: Int = 1280): Bitmap? {
+        fun decode(path: String, maxEdge: Int = 800): Bitmap? {
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             BitmapFactory.decodeFile(path, bounds)
             if (bounds.outWidth <= 0) return null
@@ -273,8 +278,15 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
 
     private fun findFace(bmp: Bitmap): Face? {
         val det = detector ?: return null; val lm = landmarker ?: return null
-        mark("detect ${bmp.width}x${bmp.height}")
-        val img = toNative(bmp)
+        // The detector works in strides of 32: give it a canvas padded (black, right and bottom) to a multiple of 32.
+        // Face coordinates stay valid for the original bitmap because the picture stays anchored at the top left.
+        val pw = (bmp.width + 31) / 32 * 32; val ph = (bmp.height + 31) / 32 * 32
+        val padded = if (pw == bmp.width && ph == bmp.height) bmp else Bitmap.createBitmap(pw, ph, Bitmap.Config.ARGB_8888).also {
+            android.graphics.Canvas(it).drawBitmap(bmp, 0f, 0f, null)
+        }
+        mark("detect ${bmp.width}x${bmp.height} padded ${pw}x${ph}")
+        val img = toNative(padded)
+        if (padded !== bmp) padded.recycle()
         val faces = det.Detect(img)
         if (faces.isNullOrEmpty()) return null
         val sorted = faces.sortedByDescending { it.width.toLong() * it.height }
