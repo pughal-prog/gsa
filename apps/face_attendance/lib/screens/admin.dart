@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -216,6 +217,7 @@ class _EnrolCaptureState extends State<EnrolCapture> {
       if (!widget.s.engineReady) throw 'Face engine not ready';
       needed = (await Native.getConfig())['enrolFrames'] as int? ?? 3;
       await cam.open(widget.s.camera);
+      if (mounted) setState(() {});
       await Native.enrolBegin(widget.student['id'].toString());
       setState(() => hint = 'Look at the camera');
       final end = DateTime.now().add(const Duration(seconds: 60));
@@ -228,7 +230,7 @@ class _EnrolCaptureState extends State<EnrolCapture> {
           case 'duplicate': throw 'This face already matches another student (id ${r['other_student_id']}). Enrolment stopped.';
           case 'no_face': setState(() => hint = 'Look at the camera'); break;
           case 'multiple': setState(() => hint = 'One person only'); break;
-          default: setState(() => hint = 'Adjust: ${r['reason'] ?? 'position'}');
+          default: setState(() => hint = _why[r['reason']] ?? 'Adjust your position');
         }
       }
       if (count < needed) throw 'Could not capture enough good frames. Try again in better light.';
@@ -245,19 +247,35 @@ class _EnrolCaptureState extends State<EnrolCapture> {
   @override
   void dispose() { running = false; cam.close(); Native.enrolCancel(); super.dispose(); }
 
+  static const _why = {
+    'too_far': 'Move closer', 'not_centered': 'Centre your face', 'tilted': 'Keep your head straight', 'turned': 'Look at the camera',
+    'too_dark': 'Too dark', 'too_bright': 'Too bright', 'blurry': 'Hold still', 'liveness_unclear': 'Look at the camera, hold still',
+    'spoof': 'Live face required', 'different_person': 'One person only',
+  };
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text('Enrol ${widget.student['name']}')),
-        body: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          if (cam.ctl != null && err == null) const Icon(Icons.face, size: 72, color: C.brand),
-          const SizedBox(height: 12),
-          Text(err ?? hint, textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: err != null ? C.bad : C.ink)),
-          const SizedBox(height: 16),
-          if (err == null) LinearProgressIndicator(value: needed == 0 ? 0 : count / needed),
-          const SizedBox(height: 20),
-          FilledButton(onPressed: () => Navigator.pop(context, false), child: Text(err != null ? 'Close' : 'Cancel')),
-        ])),
-      );
+  Widget build(BuildContext context) {
+    final pct = needed == 0 ? 0 : (count * 100 / needed).round().clamp(0, 100);
+    final showCam = cam.ctl != null && cam.ctl!.value.isInitialized && cam.ctl!.value.previewSize != null && err == null;
+    return Scaffold(
+      appBar: AppBar(title: Text('Enrol ${widget.student['name']}')),
+      body: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
+        Expanded(child: Center(child: showCam
+            ? ClipRRect(borderRadius: BorderRadius.circular(18), child: AspectRatio(aspectRatio: 3 / 4, child: FittedBox(fit: BoxFit.cover, clipBehavior: Clip.hardEdge,
+                child: SizedBox(width: cam.ctl!.value.previewSize!.height, height: cam.ctl!.value.previewSize!.width, child: CameraPreview(cam.ctl!)))))
+            : Icon(err != null ? Icons.error_outline : Icons.face, size: 72, color: err != null ? C.bad : C.brand))),
+        const SizedBox(height: 12),
+        if (err == null) Text('$pct% enrolled', style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: C.ink)),
+        if (err == null) Text('$count of $needed photos captured', style: const TextStyle(fontSize: 14, color: Colors.black54)),
+        const SizedBox(height: 8),
+        if (err == null) LinearProgressIndicator(value: needed == 0 ? 0 : count / needed, minHeight: 10),
+        const SizedBox(height: 12),
+        Text(err ?? hint, textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: err != null ? C.bad : C.ink)),
+        const SizedBox(height: 14),
+        SizedBox(width: double.infinity, child: FilledButton(onPressed: () => Navigator.pop(context, false), child: Text(err != null ? 'Close' : 'Cancel'))),
+      ])),
+    );
+  }
 }
 
 // ------------------------------------------------------------------ manual fallback
