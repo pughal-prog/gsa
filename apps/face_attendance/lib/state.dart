@@ -97,7 +97,7 @@ class AppState extends ChangeNotifier {
     syncing = true; notifyListeners();
     try {
       while (true) {
-        final batch = await Native.queuePending(50);
+        final batch = await Native.queuePending(4);
         if (batch.isEmpty) break;
         final res = await api.postEvents(batch);
         final acked = (res['acked'] as List).map((e) => e.toString()).toList();
@@ -106,7 +106,7 @@ class AppState extends ChangeNotifier {
         if (acked.isEmpty && rejected.isEmpty) throw ApiError('Server did not acknowledge events');
         if (acked.isNotEmpty) await Native.queueAck(acked);
         if (rejected.isNotEmpty) await Native.queueReject(rejected);
-        if (batch.length < 50) break;
+        if (batch.length < 4) break;
       }
       final cfg = await api.config();
       deviceId = ((cfg['device'] as Map)['id'] as num).toInt();

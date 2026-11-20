@@ -17,7 +17,7 @@ import { recordArrival } from '../notify'
 
 const CONSENT_VERSION = 'v1'
 const NOTIFY_WINDOW_MS = 6 * 60 * 60 * 1000 // do not message parents about scans older than 6 hours
-const MAX_BATCH = 100
+const MAX_BATCH = 4
 const EVENT_ID = /^[A-Za-z0-9-]{8,64}$/
 
 // ---------- helpers ----------
