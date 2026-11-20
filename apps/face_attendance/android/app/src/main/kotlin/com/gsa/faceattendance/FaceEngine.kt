@@ -118,6 +118,9 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
             // ts_Workbench_run). Single compute thread and a larger minimum face size keep its work small and predictable.
             it.set(FaceDetector.Property.PROPERTY_NUMBER_THREADS, 1.0)
             it.set(FaceDetector.Property.PROPERTY_MIN_FACE_SIZE, 60.0)
+            // Default confidence is 0.9, which misses real faces in uneven light. Later checks (landmarks, pose, sharpness,
+            // liveness, recognition) reject anything that is not a clean face, so a lower detector bar only helps recall.
+            it.set(FaceDetector.Property.PROPERTY_THRESHOLD, 0.7)
         }
         landmarker = FaceLandmarker(m("face_landmarker_pts5.csta"))
         antiSpoof = FaceAntiSpoofing(m("fas_first.csta", "fas_second.csta")).also {
@@ -389,7 +392,8 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
      * Analyses one frame. Attendance is only ever accepted ("accepted") after [Cfg.hitsRequired] frames that each
      * passed quality, liveness and a confident, unambiguous match to the SAME student. Detection alone never counts.
      */
-    fun scanFrame(path: String): JSONObject {
+    fun scanFrame(path: String): JSONObject { val t0 = System.nanoTime(); return scanFrameImpl(path).also { it.put("ms", (System.nanoTime() - t0) / 1_000_000) } }
+    private fun scanFrameImpl(path: String): JSONObject {
         val out = JSONObject()
         val bmp = decode(path) ?: return out.put("status", "error").put("reason", "bad_image")
         try {
@@ -436,7 +440,8 @@ class FaceEngine(private val ctx: Context, private val store: Store) {
     fun enrolCancel() { enrolId = null; caps.clear() }
 
     /** Takes one enrolment frame. It must be a good-quality, live face, the same person as the first frame, and not already enrolled as another student. */
-    fun enrolFrame(path: String): JSONObject {
+    fun enrolFrame(path: String): JSONObject { val t0 = System.nanoTime(); return enrolFrameImpl(path).also { it.put("ms", (System.nanoTime() - t0) / 1_000_000) } }
+    private fun enrolFrameImpl(path: String): JSONObject {
         val out = JSONObject(); val sid = enrolId ?: return out.put("status", "error").put("reason", "not_started")
         val bmp = decode(path) ?: return out.put("status", "error").put("reason", "bad_image")
         val f = findFace(bmp) ?: run { bmp.recycle(); return out.put("status", "no_face") }

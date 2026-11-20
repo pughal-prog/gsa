@@ -40,9 +40,13 @@ class _ScanScreenState extends State<ScanScreen> {
       setState(() { ready = true; hint = 'Look at the camera'; });
       await Native.scanBegin();
       final end = DateTime.now().add(const Duration(seconds: 25));
+      // The next picture is taken while the current one is analysed, so the camera is never idle.
+      Future<String?> next = cam.snap();
+      try {
       while (!done && mounted && DateTime.now().isBefore(end)) {
-        final path = await cam.snap();
-        if (path == null) { await Future.delayed(const Duration(milliseconds: 150)); continue; }
+        final path = await next;
+        if (path == null) { await Future.delayed(const Duration(milliseconds: 100)); next = cam.snap(); continue; }
+        next = cam.snap();
         Map<String, dynamic> r;
         try { r = await Native.scanFrame(path); } finally { CamSession.discard(path); }
         if (!mounted || done) break;
@@ -62,6 +66,7 @@ class _ScanScreenState extends State<ScanScreen> {
           }
         });
       }
+      } finally { CamSession.discard(await next); }
       if (!done && mounted) _finish({'status': 'timeout'});
     } catch (e) {
       if (mounted) setState(() => err = e.toString());

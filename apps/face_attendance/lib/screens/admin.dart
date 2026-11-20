@@ -207,7 +207,7 @@ class EnrolCapture extends StatefulWidget {
 }
 
 class _EnrolCaptureState extends State<EnrolCapture> {
-  final cam = CamSession(); String hint = 'Starting camera'; int count = 0; int needed = 3; bool running = true; String? err;
+  final cam = CamSession(); String hint = 'Starting camera'; int count = 0; int needed = 3; bool running = true; String? err; int? lastMs;
 
   @override
   void initState() { super.initState(); _run(); }
@@ -221,18 +221,27 @@ class _EnrolCaptureState extends State<EnrolCapture> {
       await Native.enrolBegin(widget.student['id'].toString());
       setState(() => hint = 'Look at the camera');
       final end = DateTime.now().add(const Duration(seconds: 60));
-            while (running && mounted && count < needed && DateTime.now().isBefore(end)) {
-        final p = await cam.snap(); if (p == null) { await Future.delayed(const Duration(milliseconds: 150)); continue; }
-        Map<String, dynamic> r; try { r = await Native.enrolFrame(p); } finally { CamSession.discard(p); }
-        if (!mounted) return;
-        switch (r['status']) {
-          case 'captured': setState(() { count = r['count'] as int; hint = count < needed ? 'Good. Turn slightly and hold still' : 'Saving'; }); await Future.delayed(const Duration(milliseconds: 900)); break;
-          case 'duplicate': throw 'This face already matches another student (id ${r['other_student_id']}). Enrolment stopped.';
-          case 'no_face': setState(() => hint = 'Look at the camera'); break;
-          case 'multiple': setState(() => hint = 'One person only'); break;
-          default: setState(() => hint = (_why[r['reason']] ?? 'Adjust your position') + _score(r));
+      // The next picture is taken while the current one is analysed, so the camera is never idle.
+      Future<String?> next = cam.snap();
+      try {
+        while (running && mounted && count < needed && DateTime.now().isBefore(end)) {
+          final p = await next;
+          if (p == null) { await Future.delayed(const Duration(milliseconds: 100)); next = cam.snap(); continue; }
+          next = cam.snap();
+          Map<String, dynamic> r; try { r = await Native.enrolFrame(p); } finally { CamSession.discard(p); }
+          if (!mounted) return;
+          lastMs = r['ms'] is num ? (r['ms'] as num).toInt() : null;
+          switch (r['status']) {
+            case 'captured':
+              setState(() { count = r['count'] as int; hint = count < needed ? 'Good. Turn slightly and hold still' : 'Saving'; });
+              CamSession.discard(await next); await Future.delayed(const Duration(milliseconds: 350)); next = cam.snap(); break;
+            case 'duplicate': throw 'This face already matches another student (id ${r['other_student_id']}). Enrolment stopped.';
+            case 'no_face': setState(() => hint = 'Look at the camera'); break;
+            case 'multiple': setState(() => hint = 'One person only'); break;
+            default: setState(() => hint = (_why[r['reason']] ?? 'Adjust your position') + _score(r));
+          }
         }
-      }
+      } finally { CamSession.discard(await next); }
       if (count < needed) throw 'Could not capture enough good frames. Try again in better light.';
       final c = await Native.enrolCommit();
       if (c['ok'] != true) throw 'Could not save: ${c['reason']}';
@@ -273,7 +282,7 @@ class _EnrolCaptureState extends State<EnrolCapture> {
             : Icon(err != null ? Icons.error_outline : Icons.face, size: 72, color: err != null ? C.bad : C.brand))),
         const SizedBox(height: 12),
         if (err == null) Text('$pct% enrolled', style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: C.ink)),
-        if (err == null) Text('$count of $needed photos captured', style: const TextStyle(fontSize: 14, color: Colors.black54)),
+        if (err == null) Text('$count of $needed photos captured${lastMs != null ? '  ·  check ${lastMs}ms' : ''}', style: const TextStyle(fontSize: 14, color: Colors.black54)),
         const SizedBox(height: 8),
         if (err == null) LinearProgressIndicator(value: needed == 0 ? 0 : count / needed, minHeight: 10),
         const SizedBox(height: 12),

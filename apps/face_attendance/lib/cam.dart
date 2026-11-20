@@ -18,6 +18,7 @@ class CamSession {
     final c = CameraController(d, ResolutionPreset.high, enableAudio: false, imageFormatGroup: ImageFormatGroup.jpeg);
     await c.initialize();
     ctl = c;
+    try { await c.setFocusMode(FocusMode.auto); await c.setExposureMode(ExposureMode.auto); } catch (_) {} // continuous autofocus and metering where the phone allows it
     await Native.keepScreenOn(true);
     if (front) {
       await Native.setBrightness(1.0);
