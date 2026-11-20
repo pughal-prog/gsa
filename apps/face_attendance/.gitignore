@@ -1,0 +1,15 @@
+build/
+.dart_tool/
+.flutter-plugins*
+.packages
+pubspec.lock
+android/.gradle/
+android/local.properties
+android/gradle/
+android/gradlew*
+android/build/
+android/*.gradle
+android/*.gradle.kts
+android/gradle.properties
+android/app/build.gradle*
+android/app/proguard-rules.pro

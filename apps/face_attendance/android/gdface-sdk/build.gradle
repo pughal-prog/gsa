@@ -1,0 +1,31 @@
+// Vendored copy of GdFace SDK v0.3.0 (Apache-2.0, bundling SeetaFace6 under BSD-2-Clause).
+// Source: https://github.com/ahmadarif-lab/gdface-sdk
+// Changes made for GSA: only this build file (no maven-publish, compileSdk 35, arm64-v8a only).
+// The Kotlin and Java sources and the native libraries are unmodified. See NOTICE and LICENSE.
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.ahmadarif.gdface.sdk'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 24
+        ndk { abiFilters.add("arm64-v8a") }
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = '17' }
+    packaging { jniLibs { useLegacyPackaging = false } }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+}

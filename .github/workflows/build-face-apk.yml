@@ -1,0 +1,58 @@
+name: Build Face Attendance APK
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps/face_attendance/**', '.github/workflows/build-face-apk.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/face_attendance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: '3.27.4', channel: stable, cache: true }
+
+      - name: Use the fixed signing key (keeps app updates working)
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then mkdir -p ~/.android && echo "$KS" | base64 -d > ~/.android/debug.keystore && echo "fixed key installed"; else echo "no ANDROID_KEYSTORE_B64 secret, using a temporary key (updates will not install over older builds)"; fi
+
+      - name: Generate the Android scaffold, keep our own files
+        run: |
+          tmp=$(mktemp -d)
+          flutter create --platforms=android --project-name faceattendance --org com.gsa "$tmp/app"
+          cp -rn "$tmp/app/android/." android/
+          python3 tools/patch_android.py
+
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test
+
+      - name: Build release APK (arm64, not shrunk)
+        run: flutter build apk --release --no-shrink --target-platform android-arm64 --dart-define=API_URL=https://gsa-api.pughalanarulmani.workers.dev
+
+      - name: Rename
+        run: cp build/app/outputs/flutter-apk/app-release.apk GSAFaceAttendance.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GSAFaceAttendance-apk
+          path: apps/face_attendance/GSAFaceAttendance.apk
+
+      - name: Publish release (direct download link)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: face-apk-${{ github.run_number }}
+          name: GSA Face Attendance (build ${{ github.run_number }})
+          files: apps/face_attendance/GSAFaceAttendance.apk
