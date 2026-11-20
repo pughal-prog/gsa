@@ -26,6 +26,7 @@ class _ScanScreenState extends State<ScanScreen> {
   String hint = 'Starting camera';
   bool done = false; bool ready = false;
   String? err;
+  DateTime _lastWrong = DateTime.fromMillisecondsSinceEpoch(0);
 
   @override
   void initState() { super.initState(); _run(); }
@@ -47,6 +48,11 @@ class _ScanScreenState extends State<ScanScreen> {
         if (!mounted || done) break;
         final st = r['status'];
         if (st == 'accepted') { await _accept(r); return; }
+        // wrong-face buzz, at most once every 3 seconds so a face held in front of the camera does not buzz non-stop
+        if ((st == 'unknown' || st == 'spoof' || st == 'ambiguous') && DateTime.now().difference(_lastWrong).inSeconds >= 3) {
+          _lastWrong = DateTime.now();
+          Native.playSound('wrong');
+        }
         setState(() {
           hint = st == 'pending' ? 'Hold still' : st == 'no_face' ? 'Look at the camera' : st == 'unknown' ? 'Not recognised' :
               st == 'ambiguous' ? 'Cannot be sure, try again' : st == 'spoof' ? 'Live face required' : (_hints[r['reason']] ?? 'Adjust position');
@@ -62,6 +68,7 @@ class _ScanScreenState extends State<ScanScreen> {
     final sid = r['student_id'].toString();
     final rec = await Native.recordEvent(studentId: sid, eventType: widget.s.mode, matchScore: (r['score'] as num?)?.toDouble(),
         liveness: (r['liveness'] as num?)?.toDouble(), cooldownSeconds: widget.s.cooldown);
+    Native.playSound(rec['status'] == 'duplicate' ? 'duplicate' : (widget.s.mode == 'EXIT' ? 'exit' : 'entry'));
     final name = (widget.s.roster[sid] as Map?)?['name'] ?? 'Student $sid';
     _finish({'status': rec['status'], 'name': name, 'student_id': sid, 'type': widget.s.mode, 'at': rec['occurred_at'] ?? rec['last_at']});
     widget.s.sync();

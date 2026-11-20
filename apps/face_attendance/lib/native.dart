@@ -11,6 +11,9 @@ class Native {
   static Future<List<dynamic>> _list(String m, [Map<String, dynamic>? a]) async =>
       jsonDecode((await _ch.invokeMethod<String>(m, a)) ?? '[]') as List<dynamic>;
 
+  /// Feedback sound: entry, exit, duplicate or wrong. Never throws, a sound must not affect attendance.
+  static Future<void> playSound(String name) async { try { await _ch.invokeMethod('playSound', {'name': name}); } catch (_) {} }
+
   // engine
   static Future<Map<String, dynamic>> engineInit() => _obj('engineInit');
   static Future<Map<String, dynamic>> engineStatus() => _obj('engineStatus');

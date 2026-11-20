@@ -35,6 +35,7 @@ class Bridge(private val activity: Activity, private val store: Store) : MethodC
         when (call.method) {
             "setBrightness" -> { val v = (call.argument<Double>("value") ?: -1.0).toFloat(); activity.window.attributes = activity.window.attributes.also { it.screenBrightness = v }; result.success(null); return }
             "keepScreenOn" -> { if (call.argument<Boolean>("on") == true) activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); result.success(null); return }
+            "playSound" -> { Sound.play(call.argument<String>("name") ?: ""); result.success(null); return }
             "engineProgress" -> { result.success(engine.progress.toString()); return } // must not wait behind a running model download
         }
         (if (call.method in engineMethods) engineWorker else ioWorker).execute {
