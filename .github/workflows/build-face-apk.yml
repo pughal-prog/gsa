@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths: ['apps/face_attendance/**', '.github/workflows/build-face-apk.yml']
   workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'API address built into the app (use http://127.0.0.1:8787 for a local test build with adb reverse)'
+        default: 'https://gsa-api.pughalanarulmani.workers.dev'
 
 permissions:
   contents: write
@@ -40,7 +44,7 @@ jobs:
       - run: flutter test
 
       - name: Build release APK (arm64, not shrunk)
-        run: flutter build apk --release --no-shrink --target-platform android-arm64 --dart-define=API_URL=https://gsa-api.pughalanarulmani.workers.dev
+        run: flutter build apk --release --no-shrink --target-platform android-arm64 --dart-define=API_URL=${{ github.event.inputs.api_url || 'https://gsa-api.pughalanarulmani.workers.dev' }}
 
       - name: Rename
         run: cp build/app/outputs/flutter-apk/app-release.apk GSAFaceAttendance.apk
@@ -55,4 +59,5 @@ jobs:
         with:
           tag_name: face-apk-${{ github.run_number }}
           name: GSA Face Attendance (build ${{ github.run_number }})
+          prerelease: ${{ github.event.inputs.api_url != '' && github.event.inputs.api_url != 'https://gsa-api.pughalanarulmani.workers.dev' }}
           files: apps/face_attendance/GSAFaceAttendance.apk
