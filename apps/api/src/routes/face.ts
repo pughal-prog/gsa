@@ -53,30 +53,15 @@ type DeviceRow = { id: number; name: string; mode: 'ENTRY' | 'EXIT' }
 type DeviceApp = { Bindings: Env; Variables: { device: DeviceRow } }
 export const faceDevice = new Hono<DeviceApp>()
 
-// Best-effort brake on pairing-code guessing: 10 wrong codes per address in 10 minutes, then 429.
-// Kept in memory per Worker instance (no database write), so it slows guessing down rather than stopping it outright.
-const pairFails = new Map<string, { n: number; since: number }>()
-const PAIR_MAX_FAILS = 10, PAIR_WINDOW_MS = 10 * 60_000
-
 /** Exchange a one-time pairing code (created by an admin) for this phone's device token. */
 faceDevice.post('/pair', async (c) => {
-  const ip = c.req.header('CF-Connecting-IP') ?? 'unknown'
-  const now = Date.now()
-  let f = pairFails.get(ip)
-  if (f && now - f.since > PAIR_WINDOW_MS) { pairFails.delete(ip); f = undefined }
-  if (f && f.n >= PAIR_MAX_FAILS) return c.json({ error: 'Too many wrong pairing codes. Wait 10 minutes and try again.' }, 429)
-  const fail = () => {
-    if (pairFails.size > 2000) pairFails.clear()
-    const cur = pairFails.get(ip) ?? { n: 0, since: now }
-    cur.n++; pairFails.set(ip, cur)
-  }
   const b = await c.req.json<{ code?: string }>().catch(() => ({} as any))
   const code = normCode(String(b.code ?? ''))
   if (code.length !== 10) return c.json({ error: 'Enter the 10 character pairing code' }, 400)
   const hash = await sha256Hex(code)
   const row = await one<{ device_id: number }>(c.env.DB,
     "SELECT device_id FROM face_pairing_codes WHERE code_hash = ? AND used_at IS NULL AND expires_at > ?", hash, new Date().toISOString())
-  if (!row) { fail(); return c.json({ error: 'Pairing code is invalid or has expired. Ask the owner for a new one.' }, 401) }
+  if (!row) return c.json({ error: 'Pairing code is invalid or has expired. Ask the owner for a new one.' }, 401)
   const dev = await one<DeviceRow & { revoked_at: string | null }>(c.env.DB, 'SELECT id, name, mode, revoked_at FROM face_devices WHERE id = ?', row.device_id)
   if (!dev || dev.revoked_at) return c.json({ error: 'This device was revoked' }, 401)
   const token = `gsad_${randomHex(32)}`
