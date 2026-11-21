@@ -44,10 +44,12 @@ s, r = call('GET', '/api/face/students', headers=S); note('staff can list studen
 # ---- pairing: brute force
 s, r = call('POST', '/api/face/devices', {'name': 'Extra test phone', 'mode': 'ENTRY'}, A); check('create device', s == 201, r)
 code = r['code']; dev = r['id']
-codes = [call('POST', '/device/face/pair', {'code': 'ABCDE-%05d' % i})[0] for i in range(25)]
+codes = [call('POST', '/device/face/pair', {'code': 'ABCDE-%05d' % i}, {'CF-Connecting-IP': '203.0.113.9'})[0] for i in range(25)]
 note('25 wrong pairing codes in a row, statuses', sorted(set(codes)))
 check('wrong pairing codes never succeed', all(c != 200 for c in codes))
-s, r = call('POST', '/device/face/pair', {'code': code}); note('real code still works after 25 wrong guesses', s)
+check('guessing is slowed down: 429 after 10 wrong codes', codes[:10] == [401] * 10 and all(c == 429 for c in codes[10:]), codes)
+check('even the right code is refused from the blocked address', call('POST', '/device/face/pair', {'code': code}, {'CF-Connecting-IP': '203.0.113.9'})[0] == 429)
+s, r = call('POST', '/device/face/pair', {'code': code}, {'CF-Connecting-IP': '198.51.100.7'}); check('real code works from another address', s == 200, r)
 tok = r.get('token', ''); D = {'Authorization': 'Device ' + tok}
 for bad in ['', None, 123, 'a' * 500, "'; DROP TABLE face_devices;--", '../../etc/passwd']:
     s, _ = call('POST', '/device/face/pair', {'code': bad}); check(f'pair rejects odd code {str(bad)[:20]!r}', s in (400, 401), s)
